@@ -1,0 +1,117 @@
+{
+  "_doc": "EuGH case law on EU261 Art. 5(3) extraordinary circumstances — when an airline can / cannot escape compensation. Each entry: typical airline excuse → ECJ ruling → result for the passenger. Citing the case lets you call the airline's bluff. Sources: curia.europa.eu official judgments.",
+  "statute_of_limitations": {
+    "DE": {"years": 3, "rule": "§ 195 BGB Regelverjährung — Schluss des Jahres in dem der Schaden bekannt wurde + 3 Jahre"},
+    "AT": {"years": 3, "rule": "§ 1486 ABGB — 3-jährige Verjährung"},
+    "CH": {"years": 2, "rule": "Art. 60 OR — 2 Jahre ab Kenntnis"},
+    "FR": {"years": 5, "rule": "Art. 2224 Code Civil — 5 ans prescription civile"},
+    "GB": {"years": 6, "rule": "Limitation Act 1980 s.5 — 6 years for contract claims"},
+    "ES": {"years": 5, "rule": "Art. 1964 Código Civil — 5 años"},
+    "IT": {"years": 2, "rule": "Art. 949 Codice della Navigazione — 2 anni"},
+    "NL": {"years": 2, "rule": "Art. 8:1835 BW + EU-Verordening — 2 jaar"},
+    "PT": {"years": 3, "rule": "Art. 309 CC — 3 anos"},
+    "PL": {"years": 1, "rule": "Art. 778 Kodeks Cywilny + ULC — 1 rok (umstritten — manche zivil. Art. 805 → 3 Jahre)"}
+  },
+  "cases": [
+    {
+      "id": "wallentin-hermann-c549-07",
+      "citation": "EuGH, Urt. v. 22.12.2008 — C-549/07 (Wallentin-Hermann)",
+      "topic": "technische_probleme",
+      "keywords": ["technical issue", "technical problem", "technisches problem", "technischen problem", "technischem problem", "triebwerksausfall", "hydraulik", "defect", "defekt", "wartung"],
+      "ruling": "Technische Probleme sind GRUNDSÄTZLICH KEINE außergewöhnlichen Umstände. Nur verborgene Fabrikationsfehler oder Sabotage durch Dritte können eine Ausnahme begründen.",
+      "result_for_passenger": "Anspruch besteht — Airline kann sich nicht mit 'technischem Problem' aus der Verantwortung stehlen.",
+      "exceptions": "Hidden manufacturing defect by the manufacturer, sabotage by a third party",
+      "source_url": "https://curia.europa.eu/juris/document/document.jsf?docid=76200"
+    },
+    {
+      "id": "peskova-c315-15",
+      "citation": "EuGH, Urt. v. 04.05.2017 — C-315/15 (Pesková)",
+      "topic": "vogelschlag",
+      "keywords": ["bird strike", "Vogelschlag", "Bird hit"],
+      "ruling": "Vogelschlag IST ein außergewöhnlicher Umstand — ABER: Airline muss nachweisen, dass alle zumutbaren Vorbeuge- und Sicherheitsmaßnahmen getroffen wurden. Reparaturzeit darüber hinaus zählt nicht als außergewöhnlich.",
+      "result_for_passenger": "Anspruch teilweise — der Teil der Verspätung der über die unmittelbare Sicherheitsprüfung hinausgeht (z.B. lange Reparatur) ist zu entschädigen.",
+      "exceptions": "Nur die Sicherheitsinspektion selbst — nicht die nachgelagerte Reparaturzeit.",
+      "source_url": "https://curia.europa.eu/juris/document/document.jsf?docid=190324"
+    },
+    {
+      "id": "sturgeon-c402-07",
+      "citation": "EuGH, Urt. v. 19.11.2009 — C-402/07 & C-432/07 (Sturgeon)",
+      "topic": "verspaetung_grundsatz",
+      "keywords": ["3-stunden-grenze", "drei-stunden-regel", "sturgeon-grenze", "ankunftsverspätung-schwelle"],
+      "ruling": "Verspätungen ab 3 Stunden bei Ankunft begründen den vollen EU261-Entschädigungsanspruch — wie bei Annullierung. Dies ist die Grundlagenentscheidung.",
+      "result_for_passenger": "Bei ≥3h Ankunftsverspätung: voller Anspruch, gleich behandelt wie Annullierung.",
+      "exceptions": "Außergewöhnliche Umstände nach Art. 5(3) bleiben Befreiungsgrund — aber siehe restriktive Auslegung.",
+      "source_url": "https://curia.europa.eu/juris/document/document.jsf?docid=72645"
+    },
+    {
+      "id": "nelson-c581-10",
+      "citation": "EuGH, Urt. v. 23.10.2012 — C-581/10 (Nelson)",
+      "topic": "verspaetung_bestaetigung",
+      "keywords": ["delay confirmation", "Verspätung Bestätigung"],
+      "ruling": "Bestätigt Sturgeon: Ausgleichsanspruch bei großer Verspätung ist mit VO Art. 7 vereinbar. Die ICAO-Konventionen stehen dem nicht entgegen.",
+      "result_for_passenger": "Sturgeon-Linie bestätigt — keine Aufweichung des Anspruchs.",
+      "exceptions": "",
+      "source_url": "https://curia.europa.eu/juris/document/document.jsf?docid=128861"
+    },
+    {
+      "id": "wittwer-c12-11",
+      "citation": "EuGH, Urt. v. 31.01.2013 — C-12/11 (McDonagh)",
+      "topic": "vulkan",
+      "keywords": ["volcano", "Vulkan", "ash cloud", "Aschewolke", "Eyjafjallajökull"],
+      "ruling": "Vulkanaschewolken-Sperrung ist außergewöhnlicher Umstand. ABER: Airline bleibt zur Betreuung (Verpflegung, Unterkunft) ohne zeitliche Grenze verpflichtet.",
+      "result_for_passenger": "Kein Ausgleichsanspruch nach Art. 7. ABER: Erstattung von Verpflegung + Hotel + Transport, voller Umfang.",
+      "exceptions": "Ausgleichsanspruch entfällt. Betreuungspflicht bleibt.",
+      "source_url": "https://curia.europa.eu/juris/document/document.jsf?docid=132949"
+    },
+    {
+      "id": "kruesemann-c195-17",
+      "citation": "EuGH, Urt. v. 17.04.2018 — C-195/17 (Krüsemann)",
+      "topic": "wilder_streik",
+      "keywords": ["wilder Streik", "wildcat strike", "Personalmangel", "spontaner Streik", "Krankmeldungen"],
+      "ruling": "Ein wilder Streik der Belegschaft (auch in Form von Massen-Krankmeldungen nach Umstrukturierungs-Ankündigung) ist KEIN außergewöhnlicher Umstand. Personal-Probleme der Airline selbst sind ihr Geschäftsrisiko.",
+      "result_for_passenger": "Anspruch besteht — Airline trägt das Personalrisiko.",
+      "exceptions": "",
+      "source_url": "https://curia.europa.eu/juris/document/document.jsf?docid=201146"
+    },
+    {
+      "id": "germanwings-c501-17",
+      "citation": "EuGH, Urt. v. 04.04.2019 — C-501/17 (Germanwings)",
+      "topic": "fremdkoerper_reifen",
+      "keywords": ["fremdkörper", "Reifenschaden", "FOD", "Foreign Object Damage"],
+      "ruling": "Schaden am Reifen durch Fremdkörper auf der Start- oder Landebahn (Schraube etc.) ist ein außergewöhnlicher Umstand — solange die Airline die zumutbaren Maßnahmen ergriffen hat.",
+      "result_for_passenger": "Kein Anspruch — wenn Airline Vorsorge nachweist.",
+      "exceptions": "Airline muss zumutbare Vorsorge nachweisen.",
+      "source_url": "https://curia.europa.eu/juris/document/document.jsf?docid=212722"
+    },
+    {
+      "id": "iata-c181-20",
+      "citation": "EuGH, Urt. v. 06.10.2021 — C-181/20",
+      "topic": "atc_streik",
+      "keywords": ["ATC strike", "Flugsicherungs-Streik", "Controllers strike"],
+      "ruling": "Streik der Flugsicherung (Drittpartei) ist außergewöhnlicher Umstand — entzieht sich der Kontrolle der Airline.",
+      "result_for_passenger": "Kein Ausgleich. Aber Erstattung + Betreuung bleiben.",
+      "exceptions": "",
+      "source_url": "https://curia.europa.eu/juris/document/document.jsf?docid=247239"
+    },
+    {
+      "id": "transavia-c74-19",
+      "citation": "EuGH, Urt. v. 11.06.2020 — C-74/19 (Transavia)",
+      "topic": "stoerung_durch_passagier",
+      "keywords": ["unruly passenger", "Störer", "renitenter Passagier"],
+      "ruling": "Störung durch einen renitenten Passagier ist außergewöhnlicher Umstand — sofern Airline keine schuldhafte Verspätung verursacht hat.",
+      "result_for_passenger": "Kein Anspruch in der Regel.",
+      "exceptions": "Airline darf das Verhalten nicht selbst mitverursacht haben.",
+      "source_url": "https://curia.europa.eu/juris/document/document.jsf?docid=227294"
+    },
+    {
+      "id": "lufthansa-c517-17",
+      "citation": "EuGH, Urt. v. 12.03.2020 — C-832/18",
+      "topic": "wetter",
+      "keywords": ["weather", "Wetter", "Schneesturm", "Eis"],
+      "ruling": "Extreme Wetterbedingungen sind außergewöhnliche Umstände — solange die Sperrung/Behinderung von der Airline nicht beherrschbar war.",
+      "result_for_passenger": "Kein Ausgleich bei echt extremem Wetter.",
+      "exceptions": "Airline muss nachweisen, dass Wetter zumutbar nicht zu umgehen war.",
+      "source_url": "https://curia.europa.eu/juris/document/document.jsf?docid=224498"
+    }
+  ]
+}

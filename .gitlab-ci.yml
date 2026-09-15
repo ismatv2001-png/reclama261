@@ -1,0 +1,6 @@
+image: node:22-alpine
+
+test:
+  stage: test
+  script:
+    - node --test test/ec261.test.js

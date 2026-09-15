@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RECLAMA·261 — Mesa de reclamaciones</title>
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <span class="brand-mark">R·261</span>
+    <div class="brand-text">
+      <h1>Mesa de reclamaciones</h1>
+      <p class="sub">Reglamento (CE) 261/2004 · compensaciones aéreas</p>
+    </div>
+  </div>
+  <div class="actions">
+    <input id="search" class="search" type="search" placeholder="Buscar pasajero, vuelo, ruta…" aria-label="Buscar reclamos">
+    <button id="new-claim" class="btn btn-primary">+ Nuevo reclamo</button>
+  </div>
+</header>
+
+<section class="stats" id="stats" aria-live="polite">
+  <div class="stat">
+    <span class="stat-label">POTENCIAL EN JUEGO</span>
+    <span class="stat-value" id="stat-potential">0 €</span>
+  </div>
+  <div class="stat">
+    <span class="stat-label">COMISIÓN POTENCIAL (30 %)</span>
+    <span class="stat-value" id="stat-commission">0 €</span>
+  </div>
+  <div class="stat">
+    <span class="stat-label">RECLAMOS ACTIVOS</span>
+    <span class="stat-value" id="stat-active">0</span>
+  </div>
+  <div class="stat stat-good">
+    <span class="stat-label">COBRADO</span>
+    <span class="stat-value" id="stat-paid">0 €</span>
+  </div>
+</section>
+
+<main class="board-wrap">
+  <div class="board-head" aria-hidden="true">
+    <span>RUTA</span><span>AEROLÍNEA</span><span>PASAJERO</span><span>INCIDENCIA</span><span>IMPORTE</span><span>ESTADO</span><span></span>
+  </div>
+  <ul class="board" id="board"></ul>
+  <div class="empty" id="empty" hidden>
+    <p class="empty-glyph">✈</p>
+    <p>Sin reclamos en el tablón.</p>
+    <button class="btn btn-primary" id="empty-new">Registrar el primero</button>
+  </div>
+</main>
+
+<dialog id="new-dialog" class="dialog">
+  <form id="claim-form" method="dialog">
+    <div class="dialog-head">
+      <h2>Nuevo reclamo</h2>
+      <button type="button" class="icon-btn" data-close aria-label="Cerrar">✕</button>
+    </div>
+    <div class="form-grid">
+      <label>Pasajero *<input name="passengerName" required placeholder="Nombre y apellidos"></label>
+      <label>Email<input name="email" type="email" placeholder="pasajero@correo.com"></label>
+      <label>Aerolínea<input name="airline" placeholder="Iberia, Ryanair…"></label>
+      <label>N.º de vuelo<input name="flightNumber" placeholder="IB1234"></label>
+      <label>País de la aerolínea (ISO)
+        <input name="airlineCountry" list="country-list" maxlength="2" placeholder="ES / IE / FR…">
+      </label>
+      <label>Pasajeros<input name="passengers" type="number" min="1" value="1"></label>
+      <label>Origen *
+        <select name="departureIata" id="dep-iata" required></select>
+      </label>
+      <label>Destino *
+        <select name="arrivalIata" id="arr-iata" required></select>
+      </label>
+      <label>Fecha del vuelo<input name="flightDate" type="date" required></label>
+      <label>Incidencia
+        <select name="eventType">
+          <option value="delay">Retraso ≥ 3 h</option>
+          <option value="cancellation">Cancelación</option>
+          <option value="denied_boarding">Denegación de embarque</option>
+        </select>
+      </label>
+      <label>Llegada programada<input name="scheduledArrival" type="datetime-local" required></label>
+      <label>Llegada real<input name="actualArrival" type="datetime-local"></label>
+      <label>Días de aviso (cancelación)<input name="noticeDays" type="number" min="0" value="0"></label>
+      <label>Llegada recolocada (si hubo)<input name="rerouteArrival" type="datetime-local"></label>
+      <label>Excusa de la aerolínea<input name="airlineReason" placeholder="p. ej. problema técnico"></label>
+      <label>País de reclamación (plazo)
+        <select name="claimCountry" id="claim-country"></select>
+      </label>
+    </div>
+    <div class="live" id="live-check" hidden>
+      <div class="live-row"><span>Ámbito</span><strong id="lc-covered">—</strong></div>
+      <div class="live-row"><span>Distancia</span><strong id="lc-distance">—</strong></div>
+      <div class="live-row"><span>Importe</span><strong id="lc-amount" class="live-amount">—</strong></div>
+      <div class="live-row"><span>Plazo límite</span><strong id="lc-deadline">—</strong></div>
+      <p class="live-note" id="lc-note"></p>
+    </div>
+    <div class="dialog-foot">
+      <button type="button" class="btn" data-close>Cancelar</button>
+      <button type="submit" class="btn btn-primary">Guardar reclamo</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="detail-dialog" class="dialog">
+  <div class="dialog-head">
+    <h2 id="d-title">Reclamo</h2>
+    <button type="button" class="icon-btn" data-close aria-label="Cerrar">✕</button>
+  </div>
+  <div class="detail-grid" id="d-grid"></div>
+  <h3 class="h-timeline">Historial</h3>
+  <ol class="timeline" id="d-timeline"></ol>
+  <div class="dialog-foot">
+    <span class="status-actions" id="d-actions"></span>
+    <a class="btn" id="d-letter" target="_blank" rel="noopener">Carta de reclamación</a>
+    <button type="button" class="btn" data-close>Cerrar</button>
+  </div>
+</dialog>
+
+<datalist id="country-list"></datalist>
+<div id="toast" class="toast" hidden></div>
+<script src="/app.js"></script>
+</body>
+</html>
