@@ -13,3 +13,7 @@ data/docs/
 # Copias de seguridad de la base (contienen los mismos datos personales).
 data/*.bak*
 data/*.backup*
+
+data/clients.json
+data/watchdog.log
+data/receipts/
