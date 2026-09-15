@@ -484,6 +484,73 @@ function bindImport() {
   });
 }
 
+// ── Clientes / agencia ──
+async function fillClients() {
+  const list = await api('/api/clients').catch(() => []);
+  const sel = $('#claim-client');
+  if (sel) {
+    sel.textContent = '';
+    const none = document.createElement('option');
+    none.value = '';
+    none.textContent = '— sin cliente —';
+    sel.appendChild(none);
+    for (const c of list) {
+      const o = document.createElement('option');
+      o.value = c.id;
+      o.textContent = `${c.name} (${Math.round((c.commissionRate ?? 0.3) * 100)} %)`;
+      sel.appendChild(o);
+    }
+  }
+  return list;
+}
+
+async function renderClients() {
+  const stats = await api('/api/clients/stats').catch(() => []);
+  const ul = $('#cl-list');
+  if (!ul) return;
+  ul.textContent = '';
+  for (const s of stats) {
+    const li = document.createElement('li');
+    li.innerHTML = `<span><strong>${esc(s.name)}</strong> · ${Math.round(s.commissionRate * 100)} % ·
+      ${s.claims} reclamos · potencial ${fmtEUR.format(s.potential)} · cobrado ${fmtEUR.format(s.paid)} ·
+      comisión ${fmtEUR.format(s.commission)}</span>
+      ${s.id ? `<button type="button" class="icon-btn" data-del-client="${s.id}" aria-label="Quitar">✕</button>` : ''}`;
+    ul.appendChild(li);
+  }
+}
+
+function bindClients() {
+  $('#clients-btn')?.addEventListener('click', async () => {
+    await fillClients();
+    await renderClients();
+    $('#clients-dialog').showModal();
+  });
+  $('#cl-add')?.addEventListener('click', async () => {
+    const rate = Number($('#cl-rate').value || 30) / 100;
+    try {
+      await api('/api/clients', {
+        method: 'POST',
+        body: {
+          name: $('#cl-name').value.trim(), email: $('#cl-email').value.trim(),
+          iban: $('#cl-iban').value.trim(), commissionRate: rate,
+        },
+      });
+      $('#cl-name').value = ''; $('#cl-email').value = ''; $('#cl-iban').value = '';
+      await fillClients();
+      await renderClients();
+      toast('Cliente añadido');
+    } catch (e) { toast(e.message); }
+  });
+  $('#cl-list')?.addEventListener('click', async (e) => {
+    const id = e.target.dataset?.delClient;
+    if (!id) return;
+    await api(`/api/clients/${id}`, { method: 'DELETE' });
+    await fillClients();
+    await renderClients();
+    toast('Cliente eliminado');
+  });
+}
+
 function bind() {
   $('#search').addEventListener('input', renderBoard);
   $('#new-claim').addEventListener('click', () => $('#new-dialog').showModal());
@@ -511,11 +578,13 @@ function bind() {
   bindLive();
   bindImport();
   bindWatch();
+  bindClients();
 }
 
 async function main() {
   await fillAirports();
   try { airlines = await api('/api/airlines'); } catch { airlines = []; }
+  try { await fillClients(); } catch { /* sin clientes aún */ }
   bind();
   await refresh();
 }

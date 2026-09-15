@@ -18,6 +18,7 @@
   <div class="actions">
     <input id="search" class="search" type="search" placeholder="Buscar pasajero, vuelo, ruta…" aria-label="Buscar reclamos">
     <button id="rights-btn" class="btn">⚖ Derechos</button>
+    <button id="clients-btn" class="btn">👥 Clientes</button>
     <a id="export-btn" class="btn" href="/api/claims/export">Exportar CSV</a>
     <button id="import-csv" class="btn">Importar CSV</button>
     <button id="watch-btn" class="btn">🛰 Cazador</button>
@@ -83,6 +84,7 @@
         <input name="airlineCountry" list="country-list" maxlength="2" placeholder="ES / IE / FR…">
       </label>
       <label>Pasajeros<input name="passengers" type="number" min="1" value="1"></label>
+      <label>Cliente / agencia<select name="clientId" id="claim-client"><option value="">— sin cliente —</option></select></label>
       <label>Origen *
         <select name="departureIata" id="dep-iata" required></select>
       </label>
@@ -232,6 +234,27 @@
 </dialog>
 
 <datalist id="country-list"></datalist>
+
+<dialog id="clients-dialog" class="dialog dialog-sm">
+  <div class="dialog-head">
+    <h2>👥 Clientes / agencia</h2>
+    <button type="button" class="icon-btn" data-close aria-label="Cerrar">✕</button>
+  </div>
+  <div class="import-body">
+    <div class="form-grid" style="padding:0">
+      <label>Nombre *<input id="cl-name" placeholder="Agencia Norte"></label>
+      <label>Email<input id="cl-email" type="email"></label>
+      <label>IBAN<input id="cl-iban" placeholder="ES00 0000…"></label>
+      <label>Comisión (%)<input id="cl-rate" type="number" min="0" max="50" value="30"></label>
+    </div>
+    <button type="button" class="btn btn-primary" id="cl-add">Añadir cliente</button>
+    <ul class="doc-list" id="cl-list"></ul>
+  </div>
+  <div class="dialog-foot">
+    <span class="rights-src">Carteras por cliente con potencial y comisión</span>
+    <button type="button" class="btn" data-close>Cerrar</button>
+  </div>
+</dialog>
 <div id="toast" class="toast" hidden></div>
 <script src="/app.js"></script>
 </body>

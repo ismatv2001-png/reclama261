@@ -12,6 +12,7 @@ import { Watcher } from './watcher.js';
 import { generatePoaLetter } from './poa.js';
 import { generateInvoiceLetter } from './invoice.js';
 import { generateCourtLetter } from './court.js';
+import { ClientStore } from './clients.js';
 
 const BOOT = Date.now();
 
@@ -24,6 +25,7 @@ const ADMIN_TOKEN = process.env.ADMIN_TOKEN || '';
 const WEBHOOK_URL = process.env.WEBHOOK_URL || '';
 
 const store = new Store(process.env.DB_FILE || path.join(__dirname, '..', 'data', 'db.json'));
+const clients = new ClientStore(process.env.CLIENTS_FILE || path.join(__dirname, '..', 'data', 'clients.json'));
 const AIRLINES = JSON.parse(
   fs.readFileSync(path.join(__dirname, 'data', 'airlines.json'), 'utf8'),
 ).airlines;
@@ -173,9 +175,36 @@ const server = http.createServer(async (req, res) => {
     if (p === '/api/claims' && req.method === 'GET') {
       const stuck = url.searchParams.get('stuck') === 'true';
       const airline = url.searchParams.get('airline') || '';
+      const clientId = url.searchParams.get('clientId') || '';
       let list = stuck ? store.stuck() : store.list();
       if (airline) list = list.filter((c) => (c.airline || '').toLowerCase().includes(airline.toLowerCase()));
+      if (clientId) list = list.filter((c) => c.clientId === clientId);
       return send(res, 200, list);
+    }
+
+    // ── Clientes / agencia (multi-tenant) ──
+    if (p === '/api/clients' && req.method === 'GET') {
+      return send(res, 200, clients.list());
+    }
+    if (p === '/api/clients/stats' && req.method === 'GET') {
+      return send(res, 200, clients.stats(store.list()));
+    }
+    if (p === '/api/clients' && req.method === 'POST') {
+      if (!authorized(req)) return send(res, 401, { error: 'unauthorized' });
+      const body = await readBody(req);
+      if (!body.name) return send(res, 400, { error: 'name es obligatorio' });
+      return send(res, 201, clients.create(body));
+    }
+    const clientMatch = p.match(/^\/api\/clients\/([0-9a-f-]{36})$/);
+    if (clientMatch && req.method === 'PATCH') {
+      if (!authorized(req)) return send(res, 401, { error: 'unauthorized' });
+      const body = await readBody(req);
+      const c = clients.update(clientMatch[1], body);
+      return c ? send(res, 200, c) : send(res, 404, { error: 'not_found' });
+    }
+    if (clientMatch && req.method === 'DELETE') {
+      if (!authorized(req)) return send(res, 401, { error: 'unauthorized' });
+      return clients.remove(clientMatch[1]) ? send(res, 200, { ok: true }) : send(res, 404, { error: 'not_found' });
     }
 
     if (p === '/api/claims' && req.method === 'POST') {

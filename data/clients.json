@@ -1,0 +1,11 @@
+{
+  "clients": [
+    {
+      "id": "d226743d-2e93-42c4-8870-c2e4b75e4dd7",
+      "createdAt": "2026-09-15T22:18:14.091Z",
+      "commissionRate": 0.3,
+      "name": "Agencia Norte",
+      "email": "norte@demo.es"
+    }
+  ]
+}
