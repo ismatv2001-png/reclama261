@@ -374,3 +374,68 @@ input:focus-visible, select:focus-visible { border-color: var(--amber); }
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; }
 }
+
+/* ── Extras: aerolínea, docs, importación ── */
+.stat-bad .stat-value { color: var(--bad); }
+
+.airline-box {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin: 6px 20px 0;
+  padding: 12px 16px;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--amber);
+  border-radius: var(--radius-m);
+  background: var(--paper-2);
+  font-size: 13px;
+}
+.airline-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  color: var(--ink-3);
+  margin-bottom: 3px;
+}
+.airline-box a { color: var(--amber-deep); font-weight: 600; word-break: break-all; }
+.airline-box a:hover { text-decoration: underline; }
+
+.docs { display: flex; gap: 12px; align-items: flex-start; margin: 0 20px 12px; }
+.doc-upload { cursor: pointer; }
+.doc-list { list-style: none; margin: 0; padding: 0; flex: 1; }
+.doc-list li {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 6px 10px;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-s);
+  margin-bottom: 6px;
+  font-size: 12.5px;
+}
+.doc-list a { color: var(--amber-deep); font-weight: 600; word-break: break-all; }
+.doc-list time { color: var(--ink-3); font-family: var(--mono); font-size: 11px; margin-left: auto; white-space: nowrap; }
+
+.letter-controls { display: flex; gap: 8px; align-items: center; }
+.letter-controls select {
+  min-height: 40px;
+  padding: 0 8px;
+  font: 600 12px/1 var(--sans);
+  color: var(--ink);
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  cursor: pointer;
+}
+
+.dialog-sm { width: min(640px, calc(100vw - 32px)); }
+.import-body { display: flex; flex-direction: column; gap: 12px; padding: 18px 20px; }
+.import-hint { margin: 0; font-size: 12.5px; color: var(--ink-2); line-height: 1.6; }
+.import-hint code { font-family: var(--mono); font-size: 11.5px; background: var(--paper-2); border: 1px solid var(--line-soft); border-radius: 4px; padding: 1px 5px; }
+#import-csv-file, #csv-file { font-size: 13px; }
+#import-csv-text, #csv-text {
+  font-family: var(--mono);
+  font-size: 12px;
+  min-height: 140px;
+  resize: vertical;
+}

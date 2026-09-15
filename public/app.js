@@ -17,6 +17,8 @@ const EVENTS = { delay: 'Retraso', cancellation: 'Cancelación', denied_boarding
 
 let claims = [];
 let airports = [];
+let airlines = [];
+let detailId = null;
 let timer = null;
 
 async function api(path, opts = {}) {
@@ -79,6 +81,7 @@ async function renderStats() {
   $('#stat-commission').textContent = fmtEUR.format(s.potentialCommission);
   $('#stat-active').textContent = String(s.total - (s.byStatus.PAID || 0) - (s.byStatus.CLOSED || 0) - (s.byStatus.REJECTED || 0));
   $('#stat-paid').textContent = fmtEUR.format(s.paid);
+  $('#stat-stuck').textContent = String(s.stuck);
 }
 
 // ── Nuevo reclamo ──
@@ -205,8 +208,53 @@ function openDetail(id) {
     });
     acts.appendChild(b);
   }
-  $('#d-letter').href = `/api/claims/${c.id}/letter`;
+  detailId = c.id;
+  updateLetterLinks();
+  renderAirlineBox(c);
+  renderDocs(c.id);
   d.showModal();
+}
+
+function updateLetterLinks() {
+  if (!detailId) return;
+  const lang = $('#letter-lang').value;
+  const org = $('#esc-org').value;
+  $('#d-letter').href = `/api/claims/${detailId}/letter?lang=${lang}`;
+  $('#d-escalation').href = `/api/claims/${detailId}/escalation?org=${org}&lang=${lang}`;
+}
+
+function renderAirlineBox(c) {
+  const box = $('#d-airline');
+  const match = airlines.find((a) =>
+    a.name.toLowerCase() === (c.airline || '').toLowerCase() ||
+    (c.airline && a.name.toLowerCase().includes(c.airline.toLowerCase())));
+  if (!match) { box.hidden = true; return; }
+  box.hidden = false;
+  $('#d-airline-name').textContent = `${match.iata} · ${match.name} (${match.country})`;
+  const web = $('#d-airline-web');
+  web.href = match.web;
+  web.textContent = match.web.replace(/^https?:\/\//, '');
+  $('#d-airline-email').textContent = match.email ? `Email: ${match.email}` : '';
+  $('#d-airline-email').hidden = !match.email;
+}
+
+async function renderDocs(id) {
+  const docs = await api(`/api/claims/${id}/docs`).catch(() => []);
+  const ul = $('#d-doc-list');
+  ul.textContent = '';
+  for (const doc of docs) {
+    const li = document.createElement('li');
+    const a = document.createElement('a');
+    a.href = `/api/claims/${id}/docs/${encodeURIComponent(doc.name)}`;
+    a.target = '_blank';
+    a.rel = 'noopener';
+    a.textContent = doc.name;
+    li.appendChild(a);
+    const t = document.createElement('time');
+    t.textContent = new Date(doc.at).toLocaleDateString('es-ES');
+    li.appendChild(t);
+    ul.appendChild(li);
+  }
 }
 
 // ── Flujo ──
@@ -218,6 +266,57 @@ async function refresh() {
 
 function esc(s) {
   return String(s).replace(/[&<>"']/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+}
+
+function bindImport() {
+  $('#import-csv').addEventListener('click', () => $('#import-dialog').showModal());
+  $('#csv-template').addEventListener('click', () => {
+    const headers = 'passengerName,email,airline,flightNumber,departureIata,arrivalIata,airlineCountry,eventType,flightDate,scheduledArrival,actualArrival,noticeDays,rerouteArrival,airlineReason,claimCountry,passengers';
+    const example = 'María García,maria@correo.com,Iberia,IB1234,MAD,BCN,ES,delay,2026-05-01,2026-05-01T10:00,2026-05-01T13:30,0,,,ES,1';
+    const blob = new Blob([headers + '\n' + example], { type: 'text/csv' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'reclamos-plantilla.csv';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+  $('#csv-file').addEventListener('change', async (e) => {
+    const f = e.target.files[0];
+    if (!f) return;
+    $('#csv-text').value = await f.text();
+  });
+  $('#csv-submit').addEventListener('click', async () => {
+    const csv = $('#csv-text').value.trim();
+    if (!csv) { toast('Pega o selecciona un CSV'); return; }
+    try {
+      const res = await api('/api/claims/import', { method: 'POST', body: { csv } });
+      $('#import-dialog').close();
+      $('#csv-text').value = '';
+      $('#csv-file').value = '';
+      await refresh();
+      toast(`Importados ${res.created} reclamos${res.failed.length ? ` · ${res.failed.length} fallidos` : ''}`);
+    } catch (e) { toast(e.message); }
+  });
+  $('#letter-lang').addEventListener('change', updateLetterLinks);
+  $('#esc-org').addEventListener('change', updateLetterLinks);
+  $('#doc-file').addEventListener('change', async (e) => {
+    const f = e.target.files[0];
+    if (!f || !detailId) return;
+    if (f.size > 5_000_000) { toast('Máximo 5 MB'); return; }
+    const buf = await f.arrayBuffer();
+    let bin = '';
+    const bytes = new Uint8Array(buf);
+    for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+    try {
+      await api(`/api/claims/${detailId}/docs`, {
+        method: 'POST',
+        body: { name: f.name, dataBase64: btoa(bin) },
+      });
+      e.target.value = '';
+      await renderDocs(detailId);
+      toast('Documento subido');
+    } catch (err) { toast(err.message); }
+  });
 }
 
 function bind() {
@@ -245,10 +344,12 @@ function bind() {
     }
   });
   bindLive();
+  bindImport();
 }
 
 async function main() {
   await fillAirports();
+  try { airlines = await api('/api/airlines'); } catch { airlines = []; }
   bind();
   await refresh();
 }

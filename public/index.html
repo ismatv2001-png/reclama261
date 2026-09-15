@@ -17,6 +17,7 @@
   </div>
   <div class="actions">
     <input id="search" class="search" type="search" placeholder="Buscar pasajero, vuelo, ruta…" aria-label="Buscar reclamos">
+    <button id="import-csv" class="btn">Importar CSV</button>
     <button id="new-claim" class="btn btn-primary">+ Nuevo reclamo</button>
   </div>
 </header>
@@ -37,6 +38,10 @@
   <div class="stat stat-good">
     <span class="stat-label">COBRADO</span>
     <span class="stat-value" id="stat-paid">0 €</span>
+  </div>
+  <div class="stat stat-bad">
+    <span class="stat-label">VENCIDOS (requieren acción)</span>
+    <span class="stat-value" id="stat-stuck">0</span>
   </div>
 </section>
 
@@ -110,12 +115,53 @@
     <button type="button" class="icon-btn" data-close aria-label="Cerrar">✕</button>
   </div>
   <div class="detail-grid" id="d-grid"></div>
+  <div class="airline-box" id="d-airline" hidden>
+    <span class="airline-label">DÓNDE RECLAMAR</span>
+    <span id="d-airline-name"></span>
+    <a id="d-airline-web" target="_blank" rel="noopener"></a>
+    <span id="d-airline-email"></span>
+  </div>
+  <h3 class="h-timeline">Documentos</h3>
+  <div class="docs" id="d-docs">
+    <label class="btn doc-upload">Subir documento<input id="doc-file" type="file" hidden></label>
+    <ul id="d-doc-list" class="doc-list"></ul>
+  </div>
   <h3 class="h-timeline">Historial</h3>
   <ol class="timeline" id="d-timeline"></ol>
   <div class="dialog-foot">
     <span class="status-actions" id="d-actions"></span>
-    <a class="btn" id="d-letter" target="_blank" rel="noopener">Carta de reclamación</a>
+    <span class="letter-controls">
+      <select id="letter-lang" aria-label="Idioma de la carta">
+        <option value="es">ES</option><option value="en">EN</option><option value="de">DE</option>
+        <option value="fr">FR</option><option value="it">IT</option><option value="pt">PT</option>
+      </select>
+      <a class="btn" id="d-letter" target="_blank" rel="noopener">Carta</a>
+      <select id="esc-org" aria-label="Organismo de escalado">
+        <option value="aesa">AESA (ES)</option><option value="sop">SÖP (DE)</option>
+        <option value="caa">CAA (UK)</option><option value="generic">ADR genérico</option>
+      </select>
+      <a class="btn" id="d-escalation" target="_blank" rel="noopener">Escalado</a>
+    </span>
     <button type="button" class="btn" data-close>Cerrar</button>
+  </div>
+</dialog>
+
+<dialog id="import-dialog" class="dialog dialog-sm">
+  <div class="dialog-head">
+    <h2>Importar reclamos (CSV)</h2>
+    <button type="button" class="icon-btn" data-close aria-label="Cerrar">✕</button>
+  </div>
+  <div class="import-body">
+    <p class="import-hint">
+      Columnas: <code>passengerName,email,airline,flightNumber,departureIata,arrivalIata,airlineCountry,eventType,flightDate,scheduledArrival,actualArrival,noticeDays,rerouteArrival,airlineReason,claimCountry,passengers</code>
+    </p>
+    <button type="button" class="btn" id="csv-template">Descargar plantilla</button>
+    <input id="csv-file" type="file" accept=".csv,text/csv">
+    <textarea id="csv-text" rows="8" placeholder="…o pega aquí el contenido CSV"></textarea>
+  </div>
+  <div class="dialog-foot">
+    <button type="button" class="btn" data-close>Cancelar</button>
+    <button type="button" class="btn btn-primary" id="csv-submit">Importar</button>
   </div>
 </dialog>
 
