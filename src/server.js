@@ -388,6 +388,15 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
-server.listen(PORT, '0.0.0.0', () => {
-  console.log(`VuelaClaim escuchando en http://0.0.0.0:${PORT}`);
+// Fail-closed: sin ADMIN_TOKEN la API queda abierta (authorized() devuelve true).
+// Esta base guarda PNR, documentos e IBAN de clientes: exponerla sin token en una
+// interfaz pública es una fuga de datos personales, no un simple descuido.
+// Por eso, sin token solo se escucha en loopback; exponer requiere token explícito.
+const HOST = process.env.HOST || (ADMIN_TOKEN ? '0.0.0.0' : '127.0.0.1');
+
+server.listen(PORT, HOST, () => {
+  console.log(`VuelaClaim escuchando en http://${HOST}:${PORT}`);
+  if (!ADMIN_TOKEN) {
+    console.log('AVISO: sin ADMIN_TOKEN — accesible solo desde esta máquina. Para exponerlo: ADMIN_TOKEN=<secreto> HOST=0.0.0.0');
+  }
 });

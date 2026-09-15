@@ -47,10 +47,19 @@ WorkingDirectory=/opt/reclama261
 ExecStart=/usr/bin/node src/server.js
 Restart=always
 Environment=PORT=8787
+# OBLIGATORIO en producción: esta base guarda PNR, documentos e IBAN de clientes.
+Environment=ADMIN_TOKEN=CAMBIAR_POR_SECRETO_LARGO
+EnvironmentFile=-/etc/reclama261.env
 
 [Install]
 WantedBy=multi-user.target
 ```
+
+**Seguridad (importante).** Sin `ADMIN_TOKEN` la API no pide autenticación para crear,
+leer o modificar reclamaciones. Para que un despliegue descuidado no exponga datos
+personales, sin token el servidor escucha **solo en `127.0.0.1`** y hay que pedir
+explícitamente `HOST=0.0.0.0` (el token lo activa solo). El secreto va en el
+`EnvironmentFile`, nunca en el unit ni en el repositorio.
 
 ## Origen y créditos
 

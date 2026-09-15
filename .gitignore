@@ -4,3 +4,12 @@ data/*.tmp
 _upstream/
 
 data/watches.json
+
+# Documentos de clientes (tarjetas de embarque, DNI, justificantes...).
+# NUNCA al repositorio: los remotos son públicos y hay push automático de CI.
+# Subir esto publica datos personales de clientes.
+data/docs/
+
+# Copias de seguridad de la base (contienen los mismos datos personales).
+data/*.bak*
+data/*.backup*
