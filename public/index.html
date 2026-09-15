@@ -20,6 +20,7 @@
     <button id="rights-btn" class="btn">⚖ Derechos</button>
     <a id="export-btn" class="btn" href="/api/claims/export">Exportar CSV</a>
     <button id="import-csv" class="btn">Importar CSV</button>
+    <button id="watch-btn" class="btn">🛰 Cazador</button>
     <button id="new-claim" class="btn btn-primary">+ Nuevo reclamo</button>
   </div>
 </header>
@@ -48,6 +49,14 @@
 </section>
 
 <main class="board-wrap">
+  <section class="watch-wrap" id="watch-section" hidden>
+    <div class="watch-head">
+      <h2>🛰 Cazador de vuelos</h2>
+      <span class="watch-sub">OpenSky Network · detecta retrasos ≥3 h y crea el reclamo solo</span>
+      <button class="btn" id="watch-add">+ Vigilar vuelo</button>
+    </div>
+    <ul class="watch-list" id="watch-list"></ul>
+  </section>
   <div class="board-head" aria-hidden="true">
     <span>RUTA</span><span>AEROLÍNEA</span><span>PASAJERO</span><span>INCIDENCIA</span><span>IMPORTE</span><span>ESTADO</span><span></span>
   </div>
@@ -193,6 +202,29 @@
   <div class="dialog-foot">
     <span class="rights-src" id="rights-src"></span>
     <button type="button" class="btn" data-close>Cerrar</button>
+  </div>
+</dialog>
+
+<dialog id="watch-dialog" class="dialog dialog-sm">
+  <div class="dialog-head">
+    <h2>🛰 Vigilar vuelo</h2>
+    <button type="button" class="icon-btn" data-close aria-label="Cerrar">✕</button>
+  </div>
+  <form id="watch-form" class="form-grid">
+    <label>N.º de vuelo *<input name="flightNumber" required placeholder="IB1234"></label>
+    <label>Fecha del vuelo *<input name="flightDate" type="date" required></label>
+    <label>Aerolínea<input name="airline" placeholder="Iberia"></label>
+    <label>Pasajero *<input name="passengerName" required></label>
+    <label>Email<input name="email" type="email"></label>
+    <label>Pasajeros<input name="passengers" type="number" min="1" value="1"></label>
+    <label>Origen<select name="departureIata" id="watch-dep"></select></label>
+    <label>Destino (aeropuerto de llegada) *<select name="arrivalIata" id="watch-arr" required></select></label>
+    <label>Llegada programada *<input name="scheduledArrival" type="datetime-local" required></label>
+    <label>País de reclamación<select name="claimCountry" id="watch-country"></select></label>
+  </form>
+  <div class="dialog-foot">
+    <button type="button" class="btn" data-close>Cancelar</button>
+    <button type="button" class="btn btn-primary" id="watch-submit">Activar vigilancia</button>
   </div>
 </dialog>
 

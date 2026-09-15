@@ -8,6 +8,7 @@ import { generateClaimLetter, generateEscalationLetter, generateChaserLetter } f
 import { answerRights } from './rights.js';
 import { Store } from './store.js';
 import { parseCsv, claimsToCsv, CLAIM_FIELDS } from './csv.js';
+import { Watcher } from './watcher.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PUBLIC = path.join(__dirname, '..', 'public');
@@ -21,6 +22,47 @@ const store = new Store(process.env.DB_FILE || path.join(__dirname, '..', 'data'
 const AIRLINES = JSON.parse(
   fs.readFileSync(path.join(__dirname, 'data', 'airlines.json'), 'utf8'),
 ).airlines;
+
+// Cazador proactivo: al detectar retraso ≥3 h crea el reclamo automáticamente
+const watcher = new Watcher(process.env.WATCH_FILE || path.join(__dirname, '..', 'data', 'watches.json'), {
+  intervalMs: Number(process.env.WATCH_INTERVAL_MS || 15 * 60 * 1000),
+  onClaim: (w, delayMin) => {
+    try {
+      const evaluation = evaluateClaim({
+        eventType: 'delay',
+        departureIata: w.departureIata || '',
+        arrivalIata: w.arrivalIata,
+        airlineCountry: w.airlineCountry || '',
+        flightDate: w.flightDate,
+        scheduledArrival: w.scheduledArrival,
+        actualArrival: new Date(Date.parse(w.scheduledArrival) + delayMin * 60000).toISOString(),
+        passengers: Number(w.passengers) || 1,
+        claimCountry: w.claimCountry || 'ES',
+      });
+      const claim = store.create({
+        passengerName: w.passengerName,
+        email: w.email || '',
+        airline: w.airline || '',
+        flightNumber: w.flightNumber,
+        departureIata: w.departureIata || '',
+        arrivalIata: w.arrivalIata,
+        flightDate: w.flightDate,
+        scheduledArrival: w.scheduledArrival,
+        eventType: 'delay',
+        claimCountry: w.claimCountry || 'ES',
+        passengers: Number(w.passengers) || 1,
+        source: 'watcher',
+        watchId: w.id,
+        evaluation,
+      });
+      notifyWebhook({ type: 'watch_claim', watchId: w.id, claimId: claim.id, delayMin, amount: evaluation.totalAmount });
+      return claim.id;
+    } catch {
+      return null;
+    }
+  },
+});
+if (process.env.ENABLE_WATCHER !== '0') watcher.start();
 
 const MIME = {
   '.html': 'text/html; charset=utf-8',
@@ -206,6 +248,37 @@ const server = http.createServer(async (req, res) => {
       const f = path.join(DOCS, claim.id, safeName(docFile[2]));
       if (!fs.existsSync(f)) return send(res, 404, { error: 'not_found' });
       return send(res, 200, fs.readFileSync(f), MIME[path.extname(f).toLowerCase()] || 'application/octet-stream');
+    }
+
+    // ── Cazador (watch) ──
+    if (p === '/api/watch' && req.method === 'GET') {
+      return send(res, 200, watcher.list());
+    }
+    if (p === '/api/watch' && req.method === 'POST') {
+      if (!authorized(req)) return send(res, 401, { error: 'unauthorized' });
+      const body = await readBody(req);
+      if (!body.flightNumber || !body.arrivalIata || !body.scheduledArrival || !body.passengerName) {
+        return send(res, 400, { error: 'flightNumber, arrivalIata, scheduledArrival y passengerName son obligatorios' });
+      }
+      const w = watcher.create(body);
+      return send(res, 201, w);
+    }
+    const watchMatch = p.match(/^\/api\/watch\/([0-9a-f-]{36})$/);
+    if (watchMatch && req.method === 'DELETE') {
+      if (!authorized(req)) return send(res, 401, { error: 'unauthorized' });
+      return watcher.remove(watchMatch[1]) ? send(res, 200, { ok: true }) : send(res, 404, { error: 'not_found' });
+    }
+    const watchCheck = p.match(/^\/api\/watch\/([0-9a-f-]{36})\/check$/);
+    if (watchCheck && req.method === 'POST') {
+      if (!authorized(req)) return send(res, 401, { error: 'unauthorized' });
+      const w = watcher.get(watchCheck[1]);
+      if (!w) return send(res, 404, { error: 'not_found' });
+      try {
+        const updated = await watcher.checkWatch(w);
+        return send(res, 200, updated);
+      } catch (e) {
+        return send(res, 200, watcher.update(w.id, { status: 'WAITING_DATA', note: `error fuente: ${e.message}` }));
+      }
     }
 
     const letterMatch = p.match(/^\/api\/claims\/([0-9a-f-]{36})\/letter$/);

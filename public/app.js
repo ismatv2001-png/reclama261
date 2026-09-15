@@ -99,12 +99,21 @@ async function fillAirports() {
   };
   mk('#dep-iata');
   mk('#arr-iata');
+  mk('#watch-dep');
+  mk('#watch-arr');
   const cc = $('#claim-country');
   for (const c of COUNTRIES) {
     const o = document.createElement('option');
     o.value = c;
     o.textContent = COUNTRY_NAMES[c];
     cc.appendChild(o);
+  }
+  const wc = $('#watch-country');
+  for (const c of COUNTRIES) {
+    const o = document.createElement('option');
+    o.value = c;
+    o.textContent = COUNTRY_NAMES[c];
+    wc.appendChild(o);
   }
   const dl = $('#country-list');
   for (const c of COUNTRIES) {
@@ -304,6 +313,76 @@ async function refresh() {
   claims = await api('/api/claims');
   renderBoard();
   renderStats();
+  renderWatches();
+}
+
+// ── Cazador ──
+const WATCH_LABELS = {
+  OBSERVING: 'Observando', WAITING_DATA: 'Esperando datos', CLAIM_CREATED: 'Reclamo creado ✓',
+  NO_COMPENSATION: 'Sin compensación', NO_DATA: 'Sin datos', ERROR: 'Error',
+};
+const WATCH_CHIP = {
+  OBSERVING: 'chip-SUBMITTED', WAITING_DATA: 'chip-DRAFT', CLAIM_CREATED: 'chip-PAID',
+  NO_COMPENSATION: 'chip-CLOSED', NO_DATA: 'chip-REJECTED', ERROR: 'chip-REJECTED',
+};
+
+async function renderWatches() {
+  const watches = await api('/api/watch').catch(() => []);
+  $('#watch-section').hidden = watches.length === 0;
+  const ul = $('#watch-list');
+  ul.textContent = '';
+  for (const w of watches) {
+    const li = document.createElement('li');
+    li.className = 'watch-row';
+    const chip = WATCH_CHIP[w.status] || 'chip-DRAFT';
+    li.innerHTML = `
+      <span class="route">${esc(w.flightNumber)} → ${esc(w.arrivalIata)}</span>
+      <span>${esc(w.passengerName)}${w.departureIata ? ` <span class="muted">desde ${esc(w.departureIata)}</span>` : ''}</span>
+      <span class="muted">${esc(w.flightDate || '')} · ${esc(w.scheduledArrival || '')}</span>
+      <span><span class="chip ${chip}">${WATCH_LABELS[w.status] || w.status}${w.delayMin != null ? ` · ${w.delayMin} min` : ''}</span></span>
+      <span class="watch-actions">
+        <button type="button" class="btn" data-check="${w.id}">Comprobar</button>
+        <button type="button" class="btn" data-del="${w.id}">Quitar</button>
+      </span>`;
+    ul.appendChild(li);
+  }
+}
+
+function bindWatch() {
+  $('#watch-btn').addEventListener('click', () => $('#watch-dialog').showModal());
+  $('#watch-add').addEventListener('click', () => $('#watch-dialog').showModal());
+  $('#watch-submit').addEventListener('click', async () => {
+    const f = new FormData($('#watch-form'));
+    const body = {};
+    for (const [k, v] of f.entries()) body[k] = v;
+    if (!body.flightNumber || !body.arrivalIata || !body.scheduledArrival || !body.passengerName) {
+      toast('N.º de vuelo, destino, llegada y pasajero son obligatorios');
+      return;
+    }
+    try {
+      await api('/api/watch', { method: 'POST', body });
+      $('#watch-dialog').close();
+      $('#watch-form').reset();
+      await renderWatches();
+      toast('Vigilancia activada — el cazador comprueba solo');
+    } catch (e) { toast(e.message); }
+  });
+  $('#watch-list').addEventListener('click', async (e) => {
+    const check = e.target.dataset?.check;
+    const del = e.target.dataset?.del;
+    if (check) {
+      toast('Consultando OpenSky…');
+      const w = await api(`/api/watch/${check}/check`, { method: 'POST', body: {} });
+      toast(WATCH_LABELS[w.status] || w.status);
+      await renderWatches();
+      await refresh();
+    }
+    if (del) {
+      await api(`/api/watch/${del}`, { method: 'DELETE' });
+      await renderWatches();
+      toast('Vigilancia eliminada');
+    }
+  });
 }
 
 function esc(s) {
@@ -428,6 +507,7 @@ function bind() {
   });
   bindLive();
   bindImport();
+  bindWatch();
 }
 
 async function main() {

@@ -3,9 +3,10 @@
 Software de gestión de reclamaciones de compensación aérea: motor de elegibilidad
 (UE + Canadá), plazos de prescripción, jurisprudencia TJUE, cartas en 6 idiomas,
 recordatorios escalonados, escalados a AESA/SÖP/CAA, gastos Art. 9, documentos,
-SLA con vencimientos, importación/exportación masiva, 67 aerolíneas con contactos
-y base de conocimiento de derechos. **Cero dependencias** — corre con Node ≥ 20
-en cualquier VPS de 512 MB.
+SLA con vencimientos, importación/exportación masiva, 67 aerolíneas con contactos,
+base de conocimiento de derechos y **cazador proactivo** (vigila vuelos con datos
+gratuitos de OpenSky Network y crea el reclamo automáticamente al detectar retraso
+≥3 h). **Cero dependencias** — corre con Node ≥ 20 en cualquier VPS de 512 MB.
 
 ## Arrancar
 

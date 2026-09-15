@@ -12,4 +12,4 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: node --test test/ec261.test.js test/more.test.js test/appr.test.js test/server.test.js
+      - run: node --test test/ec261.test.js test/more.test.js test/appr.test.js test/watcher.test.js test/server.test.js

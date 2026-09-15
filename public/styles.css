@@ -375,6 +375,32 @@ input:focus-visible, select:focus-visible { border-color: var(--amber); }
   * { animation: none !important; transition: none !important; }
 }
 
+/* ── Cazador ── */
+.watch-wrap { margin-bottom: 22px; }
+.watch-head { display: flex; align-items: center; gap: 12px; padding: 4px 0 10px; }
+.watch-head h2 { margin: 0; font-size: 15px; font-weight: 650; letter-spacing: -0.01em; }
+.watch-sub { color: var(--ink-3); font-size: 12px; flex: 1; }
+.watch-list { list-style: none; margin: 0; padding: 0; border: 1px solid var(--line-soft); border-radius: var(--radius-m); background: var(--paper-2); }
+.watch-row {
+  display: grid;
+  grid-template-columns: 1.1fr 1.2fr 1fr 0.9fr 160px;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--line-soft);
+  font-size: 13px;
+}
+.watch-row:last-child { border-bottom: 0; }
+.watch-row .route { font-family: var(--mono); font-variant-numeric: tabular-nums; font-weight: 650; }
+.watch-row .muted { color: var(--ink-3); font-size: 12px; }
+.watch-actions { display: flex; gap: 6px; justify-content: flex-end; }
+.watch-actions .btn { min-height: 32px; padding: 4px 10px; font-size: 12px; }
+
+@media (max-width: 860px) {
+  .watch-row { grid-template-columns: 1fr auto; }
+  .watch-row > :nth-child(2), .watch-row > :nth-child(3) { display: none; }
+}
+
 /* ── Extras: aerolínea, docs, importación ── */
 .stat-bad .stat-value { color: var(--bad); }
 

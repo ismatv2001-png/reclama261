@@ -28,9 +28,10 @@ async function waitUp(ms = 6000) {
 
 test('integración API completa', async () => {
   const dbFile = path.join(ROOT, 'data', `db.test-${Date.now()}.json`);
+  const watchFile = path.join(ROOT, 'data', `watch.test-${Date.now()}.json`);
   proc = spawn(process.execPath, ['src/server.js'], {
     cwd: ROOT,
-    env: { ...process.env, PORT: String(PORT), DB_FILE: dbFile },
+    env: { ...process.env, PORT: String(PORT), DB_FILE: dbFile, WATCH_FILE: watchFile, ENABLE_WATCHER: '0' },
     stdio: 'ignore',
   });
   await waitUp();
@@ -128,11 +129,24 @@ test('integración API completa', async () => {
     assert.ok(rights.faq.length >= 1);
     assert.ok(rights.jurisprudence.length >= 1);
 
+    // cazador: CRUD de vigilancias (fuente desactivada en tests)
+    const watch = await (await fetch(`${BASE}/api/watch`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ flightNumber: 'IB1234', arrivalIata: 'BCN', scheduledArrival: '2026-09-01T10:00', passengerName: 'Watch Test', flightDate: '2026-09-01' }),
+    })).json();
+    assert.equal(watch.status, 'OBSERVING');
+    const watches = await (await fetch(`${BASE}/api/watch`)).json();
+    assert.equal(watches.length, 1);
+    const del = await fetch(`${BASE}/api/watch/${watch.id}`, { method: 'DELETE' });
+    assert.equal(del.status, 200);
+    assert.equal((await (await fetch(`${BASE}/api/watch`)).json()).length, 0);
+
     // stats final
     const finalStats = await (await fetch(`${BASE}/api/stats`)).json();
     assert.equal(finalStats.total, 2);
   } finally {
     proc.kill();
     try { fs.rmSync(dbFile, { force: true }); } catch { /* ok */ }
+    try { fs.rmSync(watchFile, { force: true }); } catch { /* ok */ }
   }
 });
