@@ -1,0 +1,78 @@
+name: heavy
+
+# Trabajo PESADO en la nube (no en el PC local, que tiene 7,87 GB y norma de
+# >=2 GiB libres): suite completa con la campana de fuzz, prueba de carga real
+# contra un servidor levantado en el runner, y pasadas repetidas para cazar
+# flakies. Repo PUBLICO => minutos de Actions gratis e ilimitados (netAmount=0).
+#
+# Uso manual: Actions -> heavy -> Run workflow (ajustable concurrencia/segundos).
+
+on:
+  workflow_dispatch:
+    inputs:
+      soak_concurrency:
+        description: 'Peticiones concurrentes en la prueba de carga'
+        default: '32'
+        required: false
+      soak_seconds:
+        description: 'Duracion de la prueba de carga en segundos'
+        default: '20'
+        required: false
+      repeats:
+        description: 'Pasadas repetidas de la suite'
+        default: '3'
+        required: false
+  schedule:
+    - cron: '17 3 * * *'
+  push:
+    paths:
+      - '.github/workflows/heavy.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  heavy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      SOAK_CONCURRENCY: ${{ github.event.inputs.soak_concurrency || '32' }}
+      SOAK_SECONDS: ${{ github.event.inputs.soak_seconds || '20' }}
+      REPEATS: ${{ github.event.inputs.repeats || '3' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Suite completa (incluye campana de fuzz)
+        run: npm test
+
+      - name: Levantar el servidor en el runner
+        run: |
+          node src/server.js > server.log 2>&1 &
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8787/api/health >/dev/null 2>&1; then
+              echo "servidor listo tras ${i}s"; exit 0
+            fi
+            sleep 1
+          done
+          echo "el servidor no arranco:"; cat server.log; exit 1
+
+      - name: Prueba de carga (soak)
+        run: node deploy/soak.mjs http://127.0.0.1:8787 "$SOAK_CONCURRENCY" "$SOAK_SECONDS"
+
+      - name: Pasadas repetidas (caza de flakies)
+        run: |
+          for i in $(seq 1 "$REPEATS"); do
+            echo "== pasada $i/$REPEATS =="
+            npm test
+          done
+
+      - name: Evidencia y estado del servidor
+        if: always()
+        run: |
+          echo "concurrencia=$SOAK_CONCURRENCY segundos=$SOAK_SECONDS repeticiones=$REPEATS"
+          echo "commit=${{ github.sha }}"
+          tail -n 20 server.log || true
