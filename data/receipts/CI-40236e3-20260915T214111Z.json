@@ -1,0 +1,10 @@
+{
+  "app": "VuelaClaim",
+  "timestamp": "2026-09-15T21:40:53Z",
+  "passed": 35,
+  "soak": "OK: 1978 · errores: 0 · 389.1 req/s · 3.71 MB",
+  "failed": 0,
+  "commit": "40236e3",
+  "exitCode": 0,
+  "outputSha256": "00d77b3b41bb1f66736e690fb943a2e356e1bb0761d01db875deb92e2519a48c"
+}
