@@ -6,7 +6,7 @@
   "private": true,
   "scripts": {
     "start": "node src/server.js",
-    "test": "node --test test/ec261.test.js test/more.test.js test/appr.test.js test/watcher.test.js test/clients.test.js test/fuzz.test.js test/server.test.js"
+    "test": "node --test test/ec261.test.js test/more.test.js test/appr.test.js test/watcher.test.js test/clients.test.js test/ingest.test.js test/fuzz.test.js test/server.test.js"
   },
   "engines": { "node": ">=20" }
 }

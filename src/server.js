@@ -13,6 +13,8 @@ import { generatePoaLetter } from './poa.js';
 import { generateInvoiceLetter } from './invoice.js';
 import { generateCourtLetter } from './court.js';
 import { ClientStore } from './clients.js';
+import { ingestDocuments } from './ingest.js';
+import { sweepAirportDay } from './sweeper.js';
 
 const BOOT = Date.now();
 
@@ -165,6 +167,97 @@ const server = http.createServer(async (req, res) => {
     if (p === '/api/rights' && req.method === 'GET') {
       const q = url.searchParams.get('q') || '';
       return send(res, 200, answerRights(q));
+    }
+
+    // ── Ingesta: emails/PDFs de reserva → reclamos ──
+    if (p === '/api/ingest' && req.method === 'POST') {
+      if (!authorized(req)) return send(res, 401, { error: 'unauthorized' });
+      const body = await readBody(req);
+      const emails = Array.isArray(body.emails) ? body.emails : (body.email ? [body.email] : []);
+      const pdfs = (Array.isArray(body.pdfs) ? body.pdfs : []).map((pdf) => ({
+        filename: pdf.filename || 'documento.pdf',
+        bytes: Buffer.from(pdf.dataBase64 || '', 'base64'),
+      }));
+      const result = ingestDocuments({
+        emails, pdfs, isValidAirport: (iata) => Boolean(AIRPORTS[iata]),
+      });
+      const created = [];
+      if (body.autoCreate !== false) {
+        for (const cand of result.candidates) {
+          const claims = Array.isArray(body.claims) ? body.claims : [];
+          const evaluation = evaluateClaim({
+            eventType: cand.eventType,
+            departureIata: cand.departureIata,
+            arrivalIata: cand.arrivalIata,
+            airlineCountry: AIRLINES[cand.airlinePrefix]?.country || '',
+            flightDate: cand.flightDate || '',
+            scheduledArrival: cand.flightDate ? `${cand.flightDate}T12:00` : '',
+            actualArrival: cand.flightDate && cand.delayedMin
+              ? new Date(Date.parse(`${cand.flightDate}T12:00`) + cand.delayedMin * 60000).toISOString() : '',
+            passengers: 1,
+            claimCountry: body.claimCountry || 'ES',
+            airlineReason: body.airlineReason || '',
+          });
+          const claim = store.create({
+            passengerName: cand.passengerName || body.passengerName || 'Pasajero (importado)',
+            email: body.email || '',
+            airline: AIRLINES[cand.airlinePrefix]?.name || cand.airlinePrefix || '',
+            flightNumber: cand.flightNumber,
+            departureIata: cand.departureIata,
+            arrivalIata: cand.arrivalIata,
+            flightDate: cand.flightDate,
+            eventType: cand.eventType,
+            pnr: cand.pnr,
+            clientId: body.clientId || undefined,
+            passengers: 1,
+            claimCountry: body.claimCountry || 'ES',
+            source: `ingest:${cand.source}`,
+            evaluation,
+            expenses: claims,
+          });
+          created.push({ id: claim.id, flightNumber: cand.flightNumber, route: `${cand.departureIata}→${cand.arrivalIata}`, amount: evaluation.totalAmount });
+        }
+      }
+      return send(res, 200, {
+        candidates: result.candidates.length,
+        skipped: result.skipped,
+        created,
+      });
+    }
+
+    // ── Barrido a escala (AviationStack) ──
+    if (p === '/api/sweep' && req.method === 'GET') {
+      const airportIata = url.searchParams.get('airport') || '';
+      const flightDate = url.searchParams.get('date') || new Date().toISOString().slice(0, 10);
+      const direction = url.searchParams.get('direction') === 'arr' ? 'arr' : 'dep';
+      if (!airportIata) return send(res, 400, { error: 'airport requerido' });
+      const r = await sweepAirportDay({
+        airportIata, flightDate, direction,
+        key: process.env.AVSTACK_KEY || '',
+      });
+      return send(res, 200, r);
+    }
+    if (p === '/api/sweep/watch' && req.method === 'POST') {
+      if (!authorized(req)) return send(res, 401, { error: 'unauthorized' });
+      const body = await readBody(req);
+      const opps = Array.isArray(body.opportunities) ? body.opportunities : [];
+      if (!body.passengerName) return send(res, 400, { error: 'passengerName requerido' });
+      const created = [];
+      for (const o of opps) {
+        created.push(watcher.create({
+          flightNumber: o.flightNumber,
+          arrivalIata: o.arrivalIata,
+          departureIata: o.departureIata,
+          airline: o.airline,
+          flightDate: (o.scheduledArrival || '').slice(0, 10),
+          scheduledArrival: o.scheduledArrival,
+          passengerName: body.passengerName,
+          email: body.email || '',
+          claimCountry: body.claimCountry || 'ES',
+          source: 'sweep',
+        }));
+      }
+      return send(res, 201, { created: created.length, watches: created });
     }
 
     if (p === '/api/claims/export' && req.method === 'GET') {
