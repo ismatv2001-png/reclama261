@@ -4,6 +4,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { evaluateAppr, isApprApplicable } from './appr.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -146,6 +147,7 @@ export function evaluateClaim({
   departureIata = '',
   arrivalIata = '',
   airlineCountry = '',
+  airlineCode = '',
   noticeDays = 0,
   rerouteArrival = '',
   rerouteDeparture = '',
@@ -153,6 +155,7 @@ export function evaluateClaim({
   claimCountry = 'ES',
   flightDate = '',
   passengers = 1,
+  jurisdiction = 'auto', // 'eu261' | 'appr' | 'auto'
 } = {}) {
   const dist = distanceBetween(departureIata, arrivalIata);
   if (!dist) {
@@ -164,6 +167,51 @@ export function evaluateClaim({
     airlineCountry,
   });
   const delayMin = minutesBetween(scheduledArrival, actualArrival);
+
+  // Ruta APPR (Canadá): aplica cuando se pide explícitamente o en 'auto' cuando EU261 no cubre
+  const appr = (jurisdiction === 'appr' || (jurisdiction === 'auto' && !coverage.covered && isApprApplicable(departureIata, arrivalIata)))
+    ? evaluateAppr({ departureIata, arrivalIata, airlineCode, delayMin, eventType })
+    : null;
+
+  if (appr && appr.applicable) {
+    const total = appr.amountPerPassengerCAD * Math.max(1, Number(passengers) || 1);
+    const baseDate = flightDate || scheduledArrival.slice(0, 10);
+    const deadlineDate = new Date(`${baseDate}T12:00:00Z`);
+    deadlineDate.setUTCFullYear(deadlineDate.getUTCFullYear() + 1);
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+    const deadline = {
+      country: 'CA',
+      years: 1,
+      rule: 'CTA: presentar la queja dentro de 1 año desde el incidente',
+      deadlineISO: deadlineDate.toISOString().slice(0, 10),
+      daysRemaining: Math.round((deadlineDate - today) / 86400000),
+      expired: deadlineDate < today,
+    };
+    return {
+      covered: true,
+      regulation: appr.regulation,
+      basis: appr.domestic ? 'APPR s.19 (vuelo doméstico)' : 'APPR s.19 (vuelo con origen/destino Canadá)',
+      distanceKm: dist.km,
+      tier: dist.tier,
+      delayMin,
+      eligible: appr.amountPerPassengerCAD > 0,
+      reducedBy50: false,
+      amountPerPassenger: appr.amountPerPassengerCAD,
+      currency: 'CAD',
+      totalAmount: total,
+      reasons: [appr.note],
+      warnings: [appr.note],
+      extraordinary: { matched: [], likely: false, count: 0 },
+      deadline,
+      evidence: [
+        'Tarjeta de embarque o itinerario',
+        'Prueba del retraso (hora real de llegada)',
+        'Prueba de que el motivo estaba bajo control de la aerolínea',
+      ],
+      jurisdiction: 'appr',
+    };
+  }
   const rerouteArrivalDelta = rerouteArrival
     ? minutesBetween(scheduledArrival, rerouteArrival) : null;
   const rerouteDepartureDelta = rerouteDeparture
@@ -224,6 +272,19 @@ export function evaluateClaim({
   }
   if (deadline && deadline.expired) warnings.push('Posible prescripción — verificar con abogado antes de reclamar.');
 
+  const evidence = [
+    'Tarjeta de embarque (original o copia clara)',
+    'Confirmación de reserva / email con PNR',
+  ];
+  if (eventType === 'delay') {
+    evidence.push('Prueba del retraso: pantallazo de FlightRadar24/FlightAware o parte oficial de la aerolínea');
+  } else if (eventType === 'cancellation') {
+    evidence.push('Comunicación de cancelación de la aerolínea (email/SMS/captura)');
+  } else if (eventType === 'denied_boarding') {
+    evidence.push('Tarjeta de embarque sellada o certificado de denegación de embarque');
+  }
+  evidence.push('Datos bancarios (IBAN) para el pago');
+
   return {
     covered: coverage.covered,
     regulation: coverage.regulation,
@@ -234,10 +295,13 @@ export function evaluateClaim({
     eligible,
     reducedBy50,
     amountPerPassenger: finalAmount,
+    currency: 'EUR',
     totalAmount: finalAmount * Math.max(1, Number(passengers) || 1),
     reasons,
     warnings,
     extraordinary,
     deadline,
+    evidence,
+    jurisdiction: 'eu261',
   };
 }

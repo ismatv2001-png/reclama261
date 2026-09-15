@@ -70,7 +70,7 @@ export function answerRights(q) {
     jurisprudence: jurisprudence.map((c) => ({
       citation: c.citation, topic: c.topic, ruling: c.ruling,
     })),
-    source: 'Reclama261 KB · informativo, no asesoramiento jurídico',
+    source: 'VuelaClaim KB · informativo, no asesoramiento jurídico',
   };
 }
 

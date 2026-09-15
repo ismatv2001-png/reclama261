@@ -1,8 +1,11 @@
-# reclama261 — Mesa de reclamaciones EU261/2004
+# VuelaClaim — Mesa de reclamaciones aéreas (EU261/2004 + APPR Canadá)
 
-Software de gestión de reclamaciones de compensación aérea (Reglamento CE 261/2004):
-motor de elegibilidad, plazos de prescripción, jurisprudencia TJUE, generador de
-cartas y panel web. **Cero dependencias** — corre con Node ≥ 20 en cualquier VPS.
+Software de gestión de reclamaciones de compensación aérea: motor de elegibilidad
+(UE + Canadá), plazos de prescripción, jurisprudencia TJUE, cartas en 6 idiomas,
+recordatorios escalonados, escalados a AESA/SÖP/CAA, gastos Art. 9, documentos,
+SLA con vencimientos, importación/exportación masiva, 67 aerolíneas con contactos
+y base de conocimiento de derechos. **Cero dependencias** — corre con Node ≥ 20
+en cualquier VPS de 512 MB.
 
 ## Arrancar
 
@@ -51,9 +54,14 @@ WantedBy=multi-user.target
 ## Origen y créditos
 
 - Reglas, datos de aeropuertos y jurisprudencia adaptados de
-  [flight-rights-mcp](https://github.com/mikelninh/flight-rights-mcp) (**MIT**, © 2026 Mikel) —
-  `src/data/airports.json` y `src/data/jurisprudence.json` son copias directas de ese repo.
-- Inspiración de flujo: [AeroCash](https://github.com/brandenpratt/aerocash) (AGPL-3.0, no se copia código).
+  [flight-rights-mcp](https://github.com/mikelninh/flight-rights-mcp) (**MIT**, © 2026 Mikel).
+- Régimen APPR (Canadá) portado de [AERO](https://github.com/NathanGrenier/AERO) (**MIT**).
+- Recordatorios escalonados inspirados en [Vendetta-Grievance-Agent](https://github.com/vedzilla/Vendetta-Grievance-Agent) (MIT).
+- Base de conocimiento inspirada en [agentic-rag-passenger-rights](https://github.com/david-egri/agentic-rag-passenger-rights) y
+  [apr_chatbot](https://github.com/maksym-taranukhin/apr_chatbot) (MIT).
+- Checklist de pruebas inspirado en [AeroCash](https://github.com/brandenpratt/aerocash) (AGPL, sin copia de código)
+  y [claimready-ai](https://github.com/mkumar84/claimready-ai).
+- 8 repos OSS clonados en `_upstream/` para referencia (no se distribuyen).
 
 ## Aviso legal
 

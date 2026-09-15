@@ -51,6 +51,16 @@
     "SIN": {"name": "Singapur Changi",           "city": "Singapur",   "country": "SG", "lat":  1.3644, "lon": 103.9915},
     "BKK": {"name": "Bangkok Suvarnabhumi",      "city": "Bangkok",    "country": "TH", "lat": 13.6900, "lon": 100.7501},
     "HKT": {"name": "Phuket",                    "city": "Phuket",     "country": "TH", "lat":  8.1132, "lon":  98.3169},
-    "NRT": {"name": "Tokyo Narita",              "city": "Tokyo",      "country": "JP", "lat": 35.7720, "lon": 140.3929}
+    "NRT": {"name": "Tokyo Narita",              "city": "Tokyo",      "country": "JP", "lat": 35.7720, "lon": 140.3929},
+    "YYZ": {"name": "Toronto Pearson",           "city": "Toronto",    "country": "CA", "lat": 43.6777, "lon": -79.6248},
+    "YUL": {"name": "Montréal-Trudeau",          "city": "Montréal",   "country": "CA", "lat": 45.4706, "lon": -73.7408},
+    "YVR": {"name": "Vancouver",                 "city": "Vancouver",  "country": "CA", "lat": 49.1967, "lon": -123.1815},
+    "YYC": {"name": "Calgary",                   "city": "Calgary",    "country": "CA", "lat": 51.1215, "lon": -114.0076},
+    "YOW": {"name": "Ottawa Macdonald-Cartier",  "city": "Ottawa",     "country": "CA", "lat": 45.3225, "lon": -75.6692},
+    "YHZ": {"name": "Halifax Stanfield",         "city": "Halifax",    "country": "CA", "lat": 44.8808, "lon": -63.5086},
+    "YQB": {"name": "Québec Jean-Lesage",        "city": "Québec",     "country": "CA", "lat": 46.7911, "lon": -71.3933},
+    "YEG": {"name": "Edmonton",                  "city": "Edmonton",   "country": "CA", "lat": 53.3097, "lon": -113.5797},
+    "YWG": {"name": "Winnipeg Richardson",       "city": "Winnipeg",   "country": "CA", "lat": 49.9100, "lon": -97.2399},
+    "YTZ": {"name": "Toronto Billy Bishop",      "city": "Toronto",    "country": "CA", "lat": 43.6275, "lon": -79.3962}
   }
 }

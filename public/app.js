@@ -211,9 +211,20 @@ function openDetail(id) {
   detailId = c.id;
   updateLetterLinks();
   renderAirlineBox(c);
+  renderEvidence(c);
   renderDocs(c.id);
   renderExpenses(c);
   d.showModal();
+}
+
+function renderEvidence(c) {
+  const ul = $('#d-evidence');
+  ul.textContent = '';
+  for (const item of (c.evaluation?.evidence || [])) {
+    const li = document.createElement('li');
+    li.textContent = item;
+    ul.appendChild(li);
+  }
 }
 
 function updateLetterLinks() {
@@ -264,6 +275,9 @@ function renderAirlineBox(c) {
   web.textContent = match.web.replace(/^https?:\/\//, '');
   $('#d-airline-email').textContent = match.email ? `Email: ${match.email}` : '';
   $('#d-airline-email').hidden = !match.email;
+  const tip = $('#d-airline-tip');
+  tip.hidden = !match.tip;
+  tip.textContent = match.tip ? `💡 ${match.tip}` : '';
 }
 
 async function renderDocs(id) {

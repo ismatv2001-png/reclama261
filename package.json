@@ -1,12 +1,12 @@
 {
   "name": "reclama261",
   "version": "0.1.0",
-  "description": "Mesa de reclamaciones EU261/2004 — motor, cartas y panel, sin dependencias",
+  "description": "VuelaClaim — mesa de reclamaciones aéreas EU261/2004 + APPR Canadá, sin dependencias",
   "type": "module",
   "private": true,
   "scripts": {
     "start": "node src/server.js",
-    "test": "node --test test/ec261.test.js test/more.test.js"
+    "test": "node --test test/ec261.test.js test/more.test.js test/appr.test.js test/server.test.js"
   },
   "engines": { "node": ">=20" }
 }

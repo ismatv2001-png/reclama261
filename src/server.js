@@ -17,7 +17,7 @@ const COMMISSION_RATE = Number(process.env.COMMISSION_RATE || 0.30);
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN || '';
 const WEBHOOK_URL = process.env.WEBHOOK_URL || '';
 
-const store = new Store(path.join(__dirname, '..', 'data', 'db.json'));
+const store = new Store(process.env.DB_FILE || path.join(__dirname, '..', 'data', 'db.json'));
 const AIRLINES = JSON.parse(
   fs.readFileSync(path.join(__dirname, 'data', 'airlines.json'), 'utf8'),
 ).airlines;
@@ -273,5 +273,5 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`reclama261 escuchando en http://0.0.0.0:${PORT}`);
+  console.log(`VuelaClaim escuchando en http://0.0.0.0:${PORT}`);
 });
