@@ -17,3 +17,6 @@ data/*.backup*
 data/clients.json
 data/watchdog.log
 data/receipts/
+
+# Credenciales locales (PAT de GitLab/GitHub): nunca al repo
+.secrets/
