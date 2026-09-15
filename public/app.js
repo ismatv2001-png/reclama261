@@ -244,6 +244,9 @@ function updateLetterLinks() {
   $('#d-letter').href = `/api/claims/${detailId}/letter?lang=${lang}`;
   $('#d-escalation').href = `/api/claims/${detailId}/escalation?org=${org}&lang=${lang}`;
   $('#d-chaser').href = `/api/claims/${detailId}/chaser?level=${lvl}&lang=${lang}`;
+  $('#d-poa').href = `/api/claims/${detailId}/poa?lang=${lang}`;
+  $('#d-invoice').href = `/api/claims/${detailId}/invoice?lang=${lang}`;
+  $('#d-court').href = `/api/claims/${detailId}/court?kind=demanda_verbal&lang=${lang}`;
 }
 
 function renderExpenses(c) {

@@ -3,4 +3,4 @@ image: node:22-alpine
 test:
   stage: test
   script:
-    - node --test test/ec261.test.js test/more.test.js test/appr.test.js test/watcher.test.js test/server.test.js
+    - node --test test/ec261.test.js test/more.test.js test/appr.test.js test/watcher.test.js test/fuzz.test.js test/server.test.js

@@ -7,6 +7,8 @@ import path from 'node:path';
 import { parseCsv, claimsToCsv } from '../src/csv.js';
 import { generateClaimLetter, generateEscalationLetter, generateChaserLetter } from '../src/letter.js';
 import { generatePoaLetter } from '../src/poa.js';
+import { generateInvoiceLetter } from '../src/invoice.js';
+import { generateCourtLetter } from '../src/court.js';
 import { answerRights } from '../src/rights.js';
 import { Store } from '../src/store.js';
 
@@ -105,4 +107,24 @@ test('cesión de derechos (POA) en ES y EN', () => {
   const en = generatePoaLetter(claimFixture, 'en');
   assert.match(en, /Power of attorney/);
   assert.match(en, /30 %/);
+});
+
+test('factura de comisión: 30 % sobre lo cobrado', () => {
+  const inv = generateInvoiceLetter({ ...claimFixture, paidAmount: 500 }, { lang: 'es' });
+  assert.match(inv, /FACTURA/);
+  assert.match(inv, /150\.00 €/);
+  assert.match(inv, /VC-/);
+  const invEn = generateInvoiceLetter({ ...claimFixture, paidAmount: 1000 }, { lang: 'en' });
+  assert.match(invEn, /INVOICE/);
+  assert.match(invEn, /300\.00 €/);
+});
+
+test('demanda de juicio verbal (ES) y queja CTA (CA)', () => {
+  const d = generateCourtLetter(claimFixture, 'demanda_verbal', 'es');
+  assert.match(d, /JUICIO VERBAL/);
+  assert.match(d, /500 €/);
+  assert.match(d, /LEC/);
+  const cta = generateCourtLetter({ ...claimFixture, evaluation: { totalAmount: 400 } }, 'cta', 'en');
+  assert.match(cta, /Canadian Transportation Agency/);
+  assert.match(cta, /400 CAD/);
 });

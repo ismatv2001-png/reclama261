@@ -10,6 +10,8 @@ import { Store } from './store.js';
 import { parseCsv, claimsToCsv, CLAIM_FIELDS } from './csv.js';
 import { Watcher } from './watcher.js';
 import { generatePoaLetter } from './poa.js';
+import { generateInvoiceLetter } from './invoice.js';
+import { generateCourtLetter } from './court.js';
 
 const BOOT = Date.now();
 
@@ -328,6 +330,24 @@ const server = http.createServer(async (req, res) => {
       if (!claim) return send(res, 404, { error: 'not_found' });
       const lang = url.searchParams.get('lang') === 'en' ? 'en' : 'es';
       return send(res, 200, generatePoaLetter(claim, lang), MIME['.html']);
+    }
+
+    const invoiceMatch = p.match(/^\/api\/claims\/([0-9a-f-]{36})\/invoice$/);
+    if (invoiceMatch && req.method === 'GET') {
+      const claim = store.get(invoiceMatch[1]);
+      if (!claim) return send(res, 404, { error: 'not_found' });
+      const amount = url.searchParams.get('amount') ? Number(url.searchParams.get('amount')) : null;
+      const lang = url.searchParams.get('lang') === 'en' ? 'en' : 'es';
+      return send(res, 200, generateInvoiceLetter(claim, { amount, lang }), MIME['.html']);
+    }
+
+    const courtMatch = p.match(/^\/api\/claims\/([0-9a-f-]{36})\/court$/);
+    if (courtMatch && req.method === 'GET') {
+      const claim = store.get(courtMatch[1]);
+      if (!claim) return send(res, 404, { error: 'not_found' });
+      const kind = url.searchParams.get('kind') === 'cta' ? 'cta' : 'demanda_verbal';
+      const lang = url.searchParams.get('lang') === 'en' ? 'en' : 'es';
+      return send(res, 200, generateCourtLetter(claim, kind, lang), MIME['.html']);
     }
 
     if (p === '/api/stats' && req.method === 'GET') {
