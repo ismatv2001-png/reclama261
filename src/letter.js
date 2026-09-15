@@ -111,12 +111,20 @@ const ORGS = {
   },
 };
 
-function h(claim, ev, t, cite) {
+function h(claim, ev, t, cite, { withExpenses = false } = {}) {
   const route = `${claim.departureIata} → ${claim.arrivalIata}`;
   const eventLabel = t.events[claim.eventType] || claim.eventType;
   const delayText = ev.delayMin != null ? `${Math.floor(ev.delayMin / 60)} h ${ev.delayMin % 60} min` : '—';
   const amountText = `${ev.totalAmount ?? (ev.amountPerPassenger ?? 0) * (claim.passengers || 1)} €`;
   const iban = claim.iban || (t === T.es ? 'IBAN del pasajero' : 'passenger IBAN');
+  const expenses = withExpenses ? (claim.expenses || []).filter((e) => Number(e.amount) > 0) : [];
+  const expensesBlock = expenses.length
+    ? `<p>Asimismo se reclama el reembolso de los gastos de asistencia soportados (Art. 9):</p>
+<table class="meta">
+  <tr><td>Gastos de asistencia</td><td>${expenses.map((e) => `${e.type}: ${Number(e.amount)} €`).join('<br>')}</td></tr>
+  <tr><td>Total gastos</td><td class="amount">${expenses.reduce((s, e) => s + Number(e.amount), 0)} €</td></tr>
+</table>`
+    : '';
   return `
 <table class="meta">
   <tr><td>${t.flight}</td><td>${claim.flightNumber || ''}</td></tr>
@@ -130,6 +138,7 @@ function h(claim, ev, t, cite) {
 <p>${t.body2}</p>
 ${cite ? `<div class="case"><strong>${t.citeIntro}</strong> ${cite.citation} — ${cite.ruling}</div>` : ''}
 <p>${t.payment} <strong>${iban}</strong>.</p>
+${expensesBlock}
 <p>${t.deadline}</p>`;
 }
 
@@ -167,7 +176,7 @@ export function generateClaimLetter(claim, lang = 'es') {
   const t = T[lang] || T.es;
   const ev = claim.evaluation || {};
   const cite = ev.extraordinary?.matched?.[0];
-  const inner = h(claim, ev, t, cite);
+  const inner = h(claim, ev, t, cite, { withExpenses: true });
   return shell(
     t.claimTitle,
     `${t.to} ${claim.airline || ''} · ${t.ref} ${claim.id}`,
@@ -186,6 +195,72 @@ export function generateEscalationLetter(claim, org = 'aesa', lang = 'es') {
   return shell(
     t.escTitle,
     `${t.to} ${o.name} · ${o.address} · ${t.ref} ${claim.id}`,
+    lang, inner, t.docs, t.sign, claim.passengerName || '',
+  );
+}
+
+// Recordatorios escalonados (idea: Vendetta-Grievance-Agent, MIT)
+const CHASER = {
+  es: {
+    1: {
+      title: 'Primer recordatorio',
+      body: 'En relación con la reclamación de compensación presentada y no respondida en plazo, se reitera la solicitud de pago. Si en 10 días no se recibe respuesta, se procederá a la reclamación ante la autoridad competente y, en su caso, a la vía judicial, con los intereses que procedan.',
+    },
+    2: {
+      title: 'Segundo recordatorio — preaviso de escalado',
+      body: 'Habiendo transcurrido el plazo concedido sin respuesta ni pago, se comunica formalmente que, si en 7 días no se abona la compensación, se presentará denuncia ante la autoridad nacional competente (AESA u organismo equivalente) y se ejercitarán las acciones judiciales correspondientes. Los costes de dichas acciones serán reclamados a la compañía.',
+    },
+    3: {
+      title: 'Último requerimiento antes de acciones legales',
+      body: 'Ante la ausencia reiterada de respuesta, este es el último requerimiento. Se procede de inmediato a la presentación de la reclamación administrativa y la demanda judicial, reclamando además intereses, costas y los gastos de gestión. Una copia de esta comunicación se adjuntará al expediente como prueba de la negativa al pago.',
+    },
+  },
+  en: {
+    1: {
+      title: 'First reminder',
+      body: 'With reference to the compensation claim filed and not answered in due time, payment is hereby requested again. If no reply is received within 10 days, a complaint will be filed with the competent authority and, where necessary, court proceedings initiated, with applicable interest.',
+    },
+    2: {
+      title: 'Second reminder — notice of escalation',
+      body: 'The deadline having passed without reply or payment, formal notice is given that if the compensation is not paid within 7 days, a complaint will be filed with the competent national enforcement body and legal action taken. The costs of such action will be claimed from the carrier.',
+    },
+    3: {
+      title: 'Final demand before legal action',
+      body: 'Given the repeated lack of response, this is the final demand. An administrative complaint and court claim will be filed immediately, also claiming interest, costs and handling fees. A copy of this letter will be attached to the file as evidence of refusal to pay.',
+    },
+  },
+  de: {
+    1: {
+      title: 'Erste Erinnerung',
+      body: 'Bezugnehmend auf die eingereichte und nicht fristgerecht beantwortete Ausgleichsforderung wird die Zahlung erneut verlangt. Erfolgt binnen 10 Tagen keine Antwort, wird Beschwerde bei der zuständigen Behörde und gegebenenfalls Klage erhoben, zuzüglich Zinsen.',
+    },
+    2: {
+      title: 'Zweite Erinnerung — Ankündigung der Eskalation',
+      body: 'Nach fruchtlosem Fristablauf wird förmlich mitgeteilt, dass bei Nichtzahlung binnen 7 Tagen Beschwerde bei der zuständigen nationalen Stelle (z. B. SÖP) eingelegt und Klage erhoben wird. Die Kosten hierfür werden der Fluggesellschaft in Rechnung gestellt.',
+    },
+    3: {
+      title: 'Letzte Mahnung vor rechtlichen Schritten',
+      body: 'Angesichts der wiederholten Nichtbeantwortung ist dies die letzte Mahnung. Es wird unverzüglich Verwaltungsbeschwerde und Klage erhoben, einschließlich Zinsen, Kosten und Bearbeitungsgebühren. Dieses Schreiben wird dem Verfahren als Nachweis der Zahlungsverweigerung beigefügt.',
+    },
+  },
+};
+
+export function generateChaserLetter(claim, level = 1, lang = 'es') {
+  const t = T[lang] || T.es;
+  const c = CHASER[lang] || CHASER.es;
+  const lvl = Math.min(3, Math.max(1, Number(level) || 1));
+  const ev = claim.evaluation || {};
+  const amountText = `${ev.totalAmount ?? 0} €`;
+  const inner = `
+<table class="meta">
+  <tr><td>${t.flight}</td><td>${claim.flightNumber || ''}</td></tr>
+  <tr><td>${t.route}</td><td>${claim.departureIata} → ${claim.arrivalIata}</td></tr>
+  <tr><td>${t.amount}</td><td class="amount">${amountText}</td></tr>
+</table>
+<p>${c[lvl].body}</p>`;
+  return shell(
+    `${c[lvl].title} — ${t.claimTitle}`,
+    `${t.to} ${claim.airline || ''} · ${t.ref} ${claim.id}`,
     lang, inner, t.docs, t.sign, claim.passengerName || '',
   );
 }

@@ -212,6 +212,7 @@ function openDetail(id) {
   updateLetterLinks();
   renderAirlineBox(c);
   renderDocs(c.id);
+  renderExpenses(c);
   d.showModal();
 }
 
@@ -219,8 +220,35 @@ function updateLetterLinks() {
   if (!detailId) return;
   const lang = $('#letter-lang').value;
   const org = $('#esc-org').value;
+  const lvl = $('#chaser-level').value;
   $('#d-letter').href = `/api/claims/${detailId}/letter?lang=${lang}`;
   $('#d-escalation').href = `/api/claims/${detailId}/escalation?org=${org}&lang=${lang}`;
+  $('#d-chaser').href = `/api/claims/${detailId}/chaser?level=${lvl}&lang=${lang}`;
+}
+
+function renderExpenses(c) {
+  const ul = $('#d-exp-list');
+  ul.textContent = '';
+  for (const [i, e] of (c.expenses || []).entries()) {
+    const li = document.createElement('li');
+    const span = document.createElement('span');
+    span.textContent = `${e.type}: ${Number(e.amount).toFixed(2)} €`;
+    const del = document.createElement('button');
+    del.type = 'button';
+    del.className = 'icon-btn';
+    del.style.cssText = 'width:28px;height:28px;font-size:12px;';
+    del.textContent = '✕';
+    del.setAttribute('aria-label', 'Quitar gasto');
+    del.addEventListener('click', async () => {
+      const claim = claims.find((x) => x.id === detailId);
+      claim.expenses.splice(i, 1);
+      await api(`/api/claims/${detailId}`, { method: 'PATCH', body: { expenses: claim.expenses } });
+      renderExpenses(claim);
+    });
+    li.appendChild(span);
+    li.appendChild(del);
+    ul.appendChild(li);
+  }
 }
 
 function renderAirlineBox(c) {
@@ -299,6 +327,47 @@ function bindImport() {
   });
   $('#letter-lang').addEventListener('change', updateLetterLinks);
   $('#esc-org').addEventListener('change', updateLetterLinks);
+  $('#chaser-level').addEventListener('change', updateLetterLinks);
+  $('#exp-add').addEventListener('click', async () => {
+    const type = $('#exp-type').value.trim();
+    const amount = parseFloat($('#exp-amount').value);
+    if (!type || !(amount > 0) || !detailId) { toast('Tipo y importe requeridos'); return; }
+    const claim = claims.find((x) => x.id === detailId);
+    claim.expenses = claim.expenses || [];
+    claim.expenses.push({ type, amount });
+    await api(`/api/claims/${detailId}`, { method: 'PATCH', body: { expenses: claim.expenses } });
+    $('#exp-type').value = '';
+    $('#exp-amount').value = '';
+    renderExpenses(claim);
+  });
+  $('#rights-btn').addEventListener('click', () => $('#rights-dialog').showModal());
+  let rightsTimer = null;
+  $('#rights-q').addEventListener('input', () => {
+    clearTimeout(rightsTimer);
+    rightsTimer = setTimeout(async () => {
+      const q = $('#rights-q').value.trim();
+      if (q.length < 3) { $('#rights-results').textContent = ''; return; }
+      const r = await api(`/api/rights?q=${encodeURIComponent(q)}`);
+      const box = $('#rights-results');
+      box.textContent = '';
+      for (const f of r.faq) {
+        const div = document.createElement('div');
+        div.className = 'rights-item';
+        div.innerHTML = `<strong>${esc(f.question)}</strong><p>${esc(f.answer)}</p>`;
+        box.appendChild(div);
+      }
+      for (const j of r.jurisprudence) {
+        const div = document.createElement('div');
+        div.className = 'rights-item';
+        div.innerHTML = `<strong>Jurisprudencia</strong><p>${esc(j.ruling)}</p><span class="jur">${esc(j.citation)}</span>`;
+        box.appendChild(div);
+      }
+      if (!r.faq.length && !r.jurisprudence.length) {
+        box.innerHTML = '<p class="import-hint">Sin coincidencias — prueba con: técnico, huelga, hotel, plazo, equipaje, conexión, AESA…</p>';
+      }
+      $('#rights-src').textContent = r.source;
+    }, 250);
+  });
   $('#doc-file').addEventListener('change', async (e) => {
     const f = e.target.files[0];
     if (!f || !detailId) return;

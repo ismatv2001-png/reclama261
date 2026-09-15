@@ -40,3 +40,24 @@ export const CLAIM_FIELDS = [
   'airlineCountry', 'eventType', 'flightDate', 'scheduledArrival', 'actualArrival',
   'noticeDays', 'rerouteArrival', 'airlineReason', 'claimCountry', 'passengers',
 ];
+
+export function claimsToCsv(claims) {
+  const headers = [
+    'id', 'passengerName', 'email', 'airline', 'flightNumber', 'departureIata',
+    'arrivalIata', 'eventType', 'flightDate', 'status', 'nextActionDue',
+    'amountEUR', 'expensesEUR', 'createdAt',
+  ];
+  const esc = (v) => {
+    const s = v === null || v === undefined ? '' : String(v);
+    return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+  const rows = claims.map((c) => {
+    const exp = (c.expenses || []).reduce((s, e) => s + (Number(e.amount) || 0), 0);
+    return [
+      c.id, c.passengerName, c.email, c.airline, c.flightNumber, c.departureIata,
+      c.arrivalIata, c.eventType, c.flightDate, c.status, c.nextActionDue,
+      c.evaluation?.totalAmount ?? 0, exp, c.createdAt,
+    ].map(esc).join(',');
+  });
+  return [headers.join(','), ...rows].join('\r\n');
+}

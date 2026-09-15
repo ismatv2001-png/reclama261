@@ -4,8 +4,9 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { parseCsv } from '../src/csv.js';
-import { generateClaimLetter, generateEscalationLetter } from '../src/letter.js';
+import { parseCsv, claimsToCsv } from '../src/csv.js';
+import { generateClaimLetter, generateEscalationLetter, generateChaserLetter } from '../src/letter.js';
+import { answerRights } from '../src/rights.js';
 import { Store } from '../src/store.js';
 
 const claimFixture = {
@@ -65,4 +66,32 @@ test('store: nextActionDue y stuck', () => {
   s.setStatus(rec.id, 'PAID');
   assert.equal(s.stuck().length, 0);
   fs.rmSync(file, { force: true });
+});
+
+test('recordatorios escalonados: nivel 1, 2 y 3 con tono creciente', () => {
+  const c1 = generateChaserLetter(claimFixture, 1, 'es');
+  assert.match(c1, /Primer recordatorio/);
+  const c3 = generateChaserLetter(claimFixture, 3, 'es');
+  assert.match(c3, /Último requerimiento/);
+  const c2de = generateChaserLetter(claimFixture, 2, 'de');
+  assert.match(c2de, /Zweite Erinnerung/);
+});
+
+test('gastos Art. 9 aparecen en la carta y se exportan en CSV', () => {
+  const withExp = { ...claimFixture, expenses: [{ type: 'Hotel', amount: 120 }, { type: 'Comida', amount: 35 }] };
+  const letter = generateClaimLetter(withExp, 'es');
+  assert.match(letter, /Hotel: 120 €/);
+  assert.match(letter, /155 €/);
+  const csv = claimsToCsv([withExp]);
+  assert.match(csv, /expensesEUR/);
+  assert.match(csv, /155/);
+});
+
+test('base de conocimiento: responde sobre excusas técnicas y plazos', () => {
+  const r = answerRights('la aerolínea dice problema técnico');
+  assert.ok(r.faq.length >= 1);
+  assert.ok(r.jurisprudence.length >= 1);
+  assert.match(r.faq[0].question, /técnico/i);
+  const r2 = answerRights('¿cuántos años tengo para reclamar?');
+  assert.match(r2.faq[0].question, /Hasta cuándo/i);
 });

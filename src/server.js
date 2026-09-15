@@ -4,9 +4,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { AIRPORTS, evaluateClaim } from './ec261.js';
-import { generateClaimLetter, generateEscalationLetter } from './letter.js';
+import { generateClaimLetter, generateEscalationLetter, generateChaserLetter } from './letter.js';
+import { answerRights } from './rights.js';
 import { Store } from './store.js';
-import { parseCsv, CLAIM_FIELDS } from './csv.js';
+import { parseCsv, claimsToCsv, CLAIM_FIELDS } from './csv.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PUBLIC = path.join(__dirname, '..', 'public');
@@ -98,6 +99,16 @@ const server = http.createServer(async (req, res) => {
     if (p === '/api/check' && req.method === 'POST') {
       const body = await readBody(req);
       return send(res, 200, evaluateClaim(body));
+    }
+
+    if (p === '/api/rights' && req.method === 'GET') {
+      const q = url.searchParams.get('q') || '';
+      return send(res, 200, answerRights(q));
+    }
+
+    if (p === '/api/claims/export' && req.method === 'GET') {
+      const csv = claimsToCsv(store.list());
+      return send(res, 200, csv, 'text/csv; charset=utf-8');
     }
 
     if (p === '/api/claims' && req.method === 'GET') {
@@ -212,6 +223,15 @@ const server = http.createServer(async (req, res) => {
       const org = url.searchParams.get('org') || 'aesa';
       const lang = url.searchParams.get('lang') || 'es';
       return send(res, 200, generateEscalationLetter(claim, org, lang), MIME['.html']);
+    }
+
+    const chaserMatch = p.match(/^\/api\/claims\/([0-9a-f-]{36})\/chaser$/);
+    if (chaserMatch && req.method === 'GET') {
+      const claim = store.get(chaserMatch[1]);
+      if (!claim) return send(res, 404, { error: 'not_found' });
+      const level = Number(url.searchParams.get('level') || 1);
+      const lang = url.searchParams.get('lang') || 'es';
+      return send(res, 200, generateChaserLetter(claim, level, lang), MIME['.html']);
     }
 
     if (p === '/api/stats' && req.method === 'GET') {
