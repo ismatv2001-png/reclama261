@@ -6,6 +6,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { parseCsv, claimsToCsv } from '../src/csv.js';
 import { generateClaimLetter, generateEscalationLetter, generateChaserLetter } from '../src/letter.js';
+import { generatePoaLetter } from '../src/poa.js';
 import { answerRights } from '../src/rights.js';
 import { Store } from '../src/store.js';
 
@@ -94,4 +95,14 @@ test('base de conocimiento: responde sobre excusas técnicas y plazos', () => {
   assert.match(r.faq[0].question, /técnico/i);
   const r2 = answerRights('¿cuántos años tengo para reclamar?');
   assert.match(r2.faq[0].question, /Hasta cuándo/i);
+});
+
+test('cesión de derechos (POA) en ES y EN', () => {
+  const es = generatePoaLetter(claimFixture, 'es');
+  assert.match(es, /AUTORIZO expresamente/);
+  assert.match(es, /VuelaClaim/);
+  assert.match(es, /Prueba Pérez/);
+  const en = generatePoaLetter(claimFixture, 'en');
+  assert.match(en, /Power of attorney/);
+  assert.match(en, /30 %/);
 });

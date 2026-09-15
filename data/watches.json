@@ -1,0 +1,20 @@
+{
+  "watches": [
+    {
+      "id": "4b83cbd9-8d75-4262-aec1-0c3945f3b687",
+      "createdAt": "2026-09-15T20:39:49.141Z",
+      "updatedAt": "2026-09-15T20:44:28.160Z",
+      "status": "OBSERVING",
+      "checks": 0,
+      "airline": "Iberia",
+      "arrivalIata": "BCN",
+      "flightNumber": "IB1234",
+      "claimCountry": "ES",
+      "departureIata": "MAD",
+      "flightDate": "2026-09-16",
+      "passengerName": "Demo Vigilada",
+      "email": "vigilada@demo.es",
+      "scheduledArrival": "2026-09-16T10:00"
+    }
+  ]
+}

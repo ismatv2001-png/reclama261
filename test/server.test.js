@@ -42,6 +42,11 @@ test('integración API completa', async () => {
     assert.equal(r.status, 200);
     assert.match(await r.text(), /VuelaClaim/);
 
+    const health = await (await fetch(`${BASE}/api/health`)).json();
+    assert.equal(health.ok, true);
+    assert.equal(health.app, 'VuelaClaim');
+    assert.ok(health.uptimeSec >= 0);
+
     const stats = await (await fetch(`${BASE}/api/stats`)).json();
     assert.equal(typeof stats.potential, 'number');
 
@@ -94,6 +99,10 @@ test('integración API completa', async () => {
     assert.match(esc, /AESA/);
     const chaser = await (await fetch(`${BASE}/api/claims/${claim.id}/chaser?level=2&lang=de`)).text();
     assert.match(chaser, /Zweite Erinnerung/);
+
+    // cesión de derechos
+    const poa = await (await fetch(`${BASE}/api/claims/${claim.id}/poa?lang=es`)).text();
+    assert.match(poa, /AUTORIZO/);
 
     // gastos + carta con gastos
     await fetch(`${BASE}/api/claims/${claim.id}`, {

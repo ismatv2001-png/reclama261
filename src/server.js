@@ -9,6 +9,9 @@ import { answerRights } from './rights.js';
 import { Store } from './store.js';
 import { parseCsv, claimsToCsv, CLAIM_FIELDS } from './csv.js';
 import { Watcher } from './watcher.js';
+import { generatePoaLetter } from './poa.js';
+
+const BOOT = Date.now();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PUBLIC = path.join(__dirname, '..', 'public');
@@ -141,6 +144,18 @@ const server = http.createServer(async (req, res) => {
     if (p === '/api/check' && req.method === 'POST') {
       const body = await readBody(req);
       return send(res, 200, evaluateClaim(body));
+    }
+
+    if (p === '/api/health' && req.method === 'GET') {
+      return send(res, 200, {
+        ok: true,
+        app: 'VuelaClaim',
+        version: '0.5.0',
+        uptimeSec: Math.round((Date.now() - BOOT) / 1000),
+        claims: store.list().length,
+        watches: watcher.list().length,
+        memoryMB: Math.round(process.memoryUsage().rss / 1048576),
+      });
     }
 
     if (p === '/api/rights' && req.method === 'GET') {
@@ -305,6 +320,14 @@ const server = http.createServer(async (req, res) => {
       const level = Number(url.searchParams.get('level') || 1);
       const lang = url.searchParams.get('lang') || 'es';
       return send(res, 200, generateChaserLetter(claim, level, lang), MIME['.html']);
+    }
+
+    const poaMatch = p.match(/^\/api\/claims\/([0-9a-f-]{36})\/poa$/);
+    if (poaMatch && req.method === 'GET') {
+      const claim = store.get(poaMatch[1]);
+      if (!claim) return send(res, 404, { error: 'not_found' });
+      const lang = url.searchParams.get('lang') === 'en' ? 'en' : 'es';
+      return send(res, 200, generatePoaLetter(claim, lang), MIME['.html']);
     }
 
     if (p === '/api/stats' && req.method === 'GET') {
